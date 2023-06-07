@@ -67,6 +67,7 @@ def speed_test_key(key):
         seconds = round((end_time - start_time).total_seconds())
 
         try:
+            # print(result.stderr)
             # print(result.stderr.split('\n'))
             last_row = result.stderr.split('\n')[-2].split()    # Получаем последнюю строку в выводе curl
             logger.debug(last_row)

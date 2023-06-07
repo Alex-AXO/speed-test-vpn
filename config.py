@@ -1,5 +1,5 @@
 
-FILE = 'test50.zip'     # test10.zip | test50.zip | test100.zip | test500.zip
+FILE = 'test100.zip'     # test10.zip | test100.zip | test500.zip
 
 KEYS = {
     "axo-outline-03": "ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpkbnJwYXdxQjVQazJDVWlCaTlLeFRs@176.124.202.194:46199/?outline=1",
