@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "speed-test-vpn"
+version = "0.1.0"
+description = "Измерение скорости серверов Outline VPN - AXO"
+authors = ["Alex-AXO <97378201+Alex-AXO@users.noreply.github.com>"]
+readme = "README.md"
+homepage = "http://samopoznanie.ru/axo"
+repository = "https://github.com/Alex-AXO/vpn-speed-test"
+keywords = ["vpn", "chatbot", "speed", "outline", "test", "speedtest"]
+packages = [{include = "main"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+loguru = "^0.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+speed-test = "main.main:main"

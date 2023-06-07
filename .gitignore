@@ -1,0 +1,12 @@
+.DS_Store
+.venv/
+.idea/
+.pytest_cache/
+.env
+.tool-versions
+__pycache__/
+dist/
+logs/
+db/filedb.*
+debug*
+dump*
