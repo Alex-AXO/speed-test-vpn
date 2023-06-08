@@ -55,37 +55,37 @@ def speed_test_key(key):
         # Запускаем ss-local, указывая путь к временному файлу
         ss_local = subprocess.Popen(['ss-local', '-v', '-c', 'config.json'])
 
-        time.sleep(3)
+        time.sleep(4)
 
-        start_time = datetime.now()
-        result = subprocess.run(['curl', '-x', 'socks5h://localhost:2023', '-O',
-                                 f'http://speedtest.wdc01.softlayer.com/downloads/{FILE}'],
-                                capture_output=True, text=True)
-        end_time = datetime.now()
-
-        # Мы можем получить количество секунд с помощью метода total_seconds()
-        seconds = round((end_time - start_time).total_seconds())
-
-        try:
-            # print(result.stderr)
-            # print(result.stderr.split('\n'))
-            last_row = result.stderr.split('\n')[-2].split()    # Получаем последнюю строку в выводе curl
-            logger.debug(last_row)
-
-        except Exception as e:
-            logger.error(f'Не смогли получить замеры из строки. Ошибка: {e}')
-            logger.error(f'Строка:\n{result.stderr}')
-            return 0
-
-        # Извлечение последнего вхождения скорости из строки
-        average_speed = last_row[-6]
-
-        logger.success(f"\nОперация заняла {seconds} сек. ({round(seconds / 60, 2)} мин.)\n"
-                       f"Средняя скорость – {average_speed}")
+        # start_time = datetime.now()
+        # result = subprocess.run(['curl', '-x', 'socks5h://localhost:2023', '-O',
+        #                          f'http://speedtest.wdc01.softlayer.com/downloads/{FILE}'],
+        #                         capture_output=True, text=True)
+        # end_time = datetime.now()
+        #
+        # # Мы можем получить количество секунд с помощью метода total_seconds()
+        # seconds = round((end_time - start_time).total_seconds())
+        #
+        # try:
+        #     # print(result.stderr)
+        #     # print(result.stderr.split('\n'))
+        #     last_row = result.stderr.split('\n')[-2].split()    # Получаем последнюю строку в выводе curl
+        #     logger.debug(last_row)
+        #
+        # except Exception as e:
+        #     logger.error(f'Не смогли получить замеры из строки. Ошибка: {e}')
+        #     logger.error(f'Строка:\n{result.stderr}')
+        #     return 0
+        #
+        # # Извлечение последнего вхождения скорости из строки
+        # average_speed = last_row[-6]
+        #
+        # logger.success(f"\nОперация заняла {seconds} сек. ({round(seconds / 60, 2)} мин.)\n"
+        #                f"Средняя скорость – {average_speed}")
 
         result = subprocess.run(['proxychains', 'speedtest-cli'],
                                 capture_output=True, text=True)
-        logger.debug(result)
+        # logger.debug(result)
 
         # Извлечение содержимого stdout
         output = result.stdout
