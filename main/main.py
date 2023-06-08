@@ -21,7 +21,7 @@ def main():
         logger.debug(f'{server=}')
         speed_test_key(key)
         logger.debug('')
-        # break
+        break
 
     logger.debug(f'End')
 

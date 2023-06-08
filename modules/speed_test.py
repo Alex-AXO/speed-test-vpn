@@ -5,7 +5,7 @@ from loguru import logger
 import base64
 import json
 import subprocess
-# import re
+import re
 import os
 import time
 
@@ -38,7 +38,7 @@ def speed_test_key(key):
         "mode": "tcp_and_udp",
         "server_port": int(port),
         "local_address": "127.0.0.1",
-        "local_port": 8024,
+        "local_port": 2023,
         "password": password,
         "timeout": 86400,
         "method": cipher
@@ -58,7 +58,7 @@ def speed_test_key(key):
         time.sleep(3)
 
         start_time = datetime.now()
-        result = subprocess.run(['curl', '-x', 'socks5h://localhost:8024', '-O',
+        result = subprocess.run(['curl', '-x', 'socks5h://localhost:2023', '-O',
                                  f'http://speedtest.wdc01.softlayer.com/downloads/{FILE}'],
                                 capture_output=True, text=True)
         end_time = datetime.now()
@@ -82,6 +82,36 @@ def speed_test_key(key):
 
         logger.success(f"\nОперация заняла {seconds} сек. ({round(seconds / 60, 2)} мин.)\n"
                        f"Средняя скорость – {average_speed}")
+
+        result = subprocess.run(['proxychains', 'speedtest-cli'],
+                                capture_output=True, text=True)
+        logger.debug(result)
+
+        # Извлечение содержимого stdout
+        output = result.stdout
+
+        # Разбиение вывода на строки
+        lines = output.split('\n')
+
+        # Паттерн для скорости загрузки
+        download_pattern = re.compile(r"Download: (\d+\.\d+ .bit/s)")
+        upload_pattern = re.compile(r"Upload: (\d+\.\d+ .bit/s)")
+
+        download_speed = ""
+        upload_speed = ""
+
+        # Проход по строкам и поиск скоростей загрузки и выгрузки
+        for line in lines:
+            download_match = download_pattern.search(line)
+            if download_match:
+                download_speed = download_match.group(1)
+
+            upload_match = upload_pattern.search(line)
+            if upload_match:
+                upload_speed = upload_match.group(1)
+
+        print("Download speed:", download_speed)
+        print("Upload speed:", upload_speed)
 
     except Exception as e:
         logger.error(f"Возможно не получилось подключится к серверу и произвести замеры. Ошибка: {e}")
