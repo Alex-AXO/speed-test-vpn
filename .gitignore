@@ -7,6 +7,7 @@
 __pycache__/
 dist/
 logs/
+#config.py
 db/filedb.*
 debug*
 dump*

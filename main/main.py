@@ -1,29 +1,34 @@
 from loguru import logger
+from aiogram.utils import executor
 
-from config import KEYS, FILE
-from modules.speed_test import speed_test_key
+from config import ADMINS
+import modules
+from initbot import scheduler, bot, dp
 
 
-logger.add("logs/debug.log", format="{time} - {level} - {message}", level="DEBUG",
-           rotation="5 days")  # Запись лог-файлов
+@logger.catch
+async def setup_scheduler(dp):
+    scheduler.add_job(modules.schedules.speed_tests, "interval", seconds=5000)
+    scheduler.start()
+
+
+@logger.catch
+async def on_startup(dp):
+    await bot.send_message(ADMINS[0], "VPN.AXO.Bot is running!")
+    logger.success(f"Start speed-test")
+    await setup_scheduler(dp)
+
+
+@logger.catch
+async def on_shutdown(dp):
+    logger.debug("Shutting down..")
+    logger.debug("Stop speed-test")
 
 
 @logger.catch
 def main():
-
-    logger.debug(f'Start')
-    logger.debug(f'Test-file: {FILE}')
-
-    for key in KEYS:
-        server = key
-        key = KEYS[key]
-
-        logger.debug(f'{server=}')
-        speed_test_key(key)
-        logger.debug('')
-        # break
-
-    logger.debug(f'End')
+    import handlers
+    executor.start_polling(dp, skip_updates=False, on_startup=on_startup, on_shutdown=on_shutdown)
 
 
 if __name__ == '__main__':
