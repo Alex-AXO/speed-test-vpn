@@ -14,11 +14,11 @@ async def speed_tests():
 
     for key in keys:
         key_id = key[0]
-        server_name = key[2]
-        key = key[3]
+        server_name = key[1]
+        key = key[2]
 
         logger.debug(f'{server_name=}, {key_id=}')
-        await speed_test_key(key, key_id)
+        await speed_test_key(key, key_id, server_name)
         logger.debug('')
         break   # Остановка после проверки первого ключа для тестирования
 

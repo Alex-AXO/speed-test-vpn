@@ -14,6 +14,21 @@ from initbot import bot
 from config import FILE, PORT, ADMINS
 
 
+@logger.catch
+def convert_to_mbits(speed_str):
+    """Преобразование скорости скачивания в Mbit/s"""
+    speed, unit = speed_str.split()
+
+    speed = float(speed)
+    if unit.lower() == 'kbit/s':
+        speed /= 1000  # convert from Kbit/s to Mbit/s
+    elif unit.lower() == 'gbit/s':
+        speed *= 1000  # convert from Gbit/s to Mbit/s
+
+    return speed
+
+
+@logger.catch
 def convert_speed_to_kilobytes(speed: str) -> float:
     """Преобразование скорости скачивания в килобайты"""
     if speed[-1] == 'k':
@@ -26,7 +41,43 @@ def convert_speed_to_kilobytes(speed: str) -> float:
         return float(speed) / 1024
 
 
-async def download_file(key_id):
+@logger.catch
+async def speed_test_cli(key_id, server_name):
+    """Замеряем скорость через speedtest-cli"""
+    logger.debug(f"speedtest-cli started")
+
+    try:    # UPDATE: proxychains4 --> proxychains
+        result = subprocess.run(['proxychains', 'speedtest-cli'],
+                                capture_output=True, text=True)
+        # logger.debug(result)
+
+        # Извлечение содержимого stdout
+        output = result.stdout
+
+    except Exception as e:
+        report = f'Error proxychains speedtest-cli: {e}'
+        logger.error(report)
+        await bot.send_message(ADMINS[0], report)
+        await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
+        return
+
+    # Ищем в строке:
+    ping = re.findall(r"(\d+(?:\.\d+)?) ms", output)[0]
+    download_speed = re.findall(r"Download: (\d+\.\d+ .bit/s)", output)[0]
+    upload_speed = re.findall(r"Upload: (\d+\.\d+ .bit/s)", output)[0]
+
+    ping = round(float(ping))
+    download_speed = convert_to_mbits(download_speed)
+    upload_speed = convert_to_mbits(upload_speed)
+
+    report = f'speedtest-cli result:\n{ping=}, {download_speed=} Mbit/s, {upload_speed=} Mbit/s'
+    logger.debug(report)
+    await bot.send_message(ADMINS[0], report)
+    await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)
+
+
+@logger.catch
+async def download_file(key_id, server_name):
     """Скачиваем файл, замеряя время и скорость"""
 
     try:
@@ -60,15 +111,15 @@ async def download_file(key_id):
 
     average_speed = convert_speed_to_kilobytes(average_speed)   # Преобразование средней скорости в килобайты
 
-    logger.success(f"\nКлюч № {key_id}. Операция заняла {seconds} сек. ({round(seconds / 60, 1)} мин.)\n"
-                   f"Средняя скорость – {average_speed}")
-    await bot.send_message(ADMINS[0], f"Ключ № {key_id}. Операция заняла {seconds} сек. ({round(seconds / 60, 1)} мин.)\n"
-                                      f"Средняя скорость – {average_speed} k")
+    report = f"Ключ № {key_id} | {server_name}:\nОперация заняла {seconds} сек. ({round(seconds / 60, 1)} мин.),\n"\
+             f"Средняя скорость – {average_speed} k."
+    logger.success(report)
+    await bot.send_message(ADMINS[0], report)
     await db.main.add_download_info(key_id, average_speed, seconds)
 
 
 @logger.catch
-async def speed_test_key(key, key_id):
+async def speed_test_key(key, key_id, server_name):
 
     # Расшифровываем ключ
     key = key[5:]  # Удаляем 'ss://'
@@ -103,39 +154,11 @@ async def speed_test_key(key, key_id):
 
         time.sleep(4)
 
-        await download_file(key_id)   # Функция скачивания файла (для замера скорости и времени)
+        await download_file(key_id, server_name)   # Функция скачивания файла (для замера скорости и времени)
 
         time.sleep(2)
 
-        # result = subprocess.run(['proxychains', 'speedtest-cli'],
-        #                         capture_output=True, text=True)
-        # # logger.debug(result)
-        #
-        # # Извлечение содержимого stdout
-        # output = result.stdout
-        #
-        # # Разбиение вывода на строки
-        # lines = output.split('\n')
-        #
-        # # Паттерн для скорости загрузки
-        # download_pattern = re.compile(r"Download: (\d+\.\d+ .bit/s)")
-        # upload_pattern = re.compile(r"Upload: (\d+\.\d+ .bit/s)")
-        #
-        # download_speed = ""
-        # upload_speed = ""
-        #
-        # # Проход по строкам и поиск скоростей загрузки и выгрузки
-        # for line in lines:
-        #     download_match = download_pattern.search(line)
-        #     if download_match:
-        #         download_speed = download_match.group(1)
-        #
-        #     upload_match = upload_pattern.search(line)
-        #     if upload_match:
-        #         upload_speed = upload_match.group(1)
-        #
-        # print("Download speed:", download_speed)
-        # print("Upload speed:", upload_speed)
+        await speed_test_cli(key_id, server_name)  # Функция измерения скорости через speedtest-cli
 
     except Exception as e:
         logger.error(f"It is impossible to connect to the server, download the file and receive data. Error: {e}")

@@ -8,8 +8,8 @@ __pycache__/
 dist/
 logs/
 config.py
-#speedtest.db
 debug*
 dump*
-config.json
+*.json
 test*.zip
+*.db

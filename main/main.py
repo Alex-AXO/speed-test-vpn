@@ -7,20 +7,30 @@ from initbot import scheduler, bot, dp
 
 
 @logger.catch
-async def setup_scheduler(dp):
-    scheduler.add_job(modules.schedules.speed_tests, "interval", seconds=5000)
+async def setup_scheduler(_):
+    # scheduler.add_job(modules.schedules.speed_tests, "interval", seconds=5000)
+    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=0, minute=11,
+                      timezone="Europe/Moscow")  # Свободные слоты для ключей
+    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=5, minute=11,
+                      timezone="Europe/Moscow")  # Свободные слоты для ключей
+    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=10, minute=11,
+                      timezone="Europe/Moscow")  # Свободные слоты для ключей
+    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=15, minute=11,
+                      timezone="Europe/Moscow")  # Свободные слоты для ключей
+    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=20, minute=11,
+                      timezone="Europe/Moscow")  # Свободные слоты для ключей
     scheduler.start()
 
 
 @logger.catch
-async def on_startup(dp):
+async def on_startup(_):
     await bot.send_message(ADMINS[0], "VPN.AXO.Bot is running!")
     logger.success(f"Start speed-test")
     await setup_scheduler(dp)
 
 
 @logger.catch
-async def on_shutdown(dp):
+async def on_shutdown(_):
     logger.debug("Shutting down..")
     logger.debug("Stop speed-test")
 
