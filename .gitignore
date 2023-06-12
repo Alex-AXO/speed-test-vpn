@@ -7,7 +7,9 @@
 __pycache__/
 dist/
 logs/
-#config.py
-db/filedb.*
+config.py
+#speedtest.db
 debug*
 dump*
+config.json
+test*.zip

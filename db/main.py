@@ -10,7 +10,7 @@ async def get_server_keys():
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute(
                 "SELECT key_id, server_id, server_name, key "
-                "FROM server_keys ") as result:
+                "FROM server_keys") as result:
             result = await result.fetchall()
             return result if result else []
 
@@ -22,6 +22,18 @@ async def add_download_info(key_id, download_speed, time, error=0):
         async with db.execute(f"INSERT INTO download_files (key_id, download_speed, time, error) "
                               f"VALUES (?, ?, ?, ?);",
                               (key_id, download_speed, time, error)) as cursor:
+            await db.commit()
+            result = cursor.lastrowid
+            return result
+
+
+@logger.catch
+async def add_new_key(server_name, key):
+    """Добавление ключа (сервера)"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute(f"INSERT INTO server_keys (server_name, key) "
+                              f"VALUES (?, ?);",
+                              (server_name, key)) as cursor:
             await db.commit()
             result = cursor.lastrowid
             return result

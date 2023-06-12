@@ -60,9 +60,9 @@ async def download_file(key_id):
 
     average_speed = convert_speed_to_kilobytes(average_speed)   # Преобразование средней скорости в килобайты
 
-    logger.success(f"\nОперация заняла {seconds} сек. ({round(seconds / 60, 2)} мин.)\n"
+    logger.success(f"\nКлюч № {key_id}. Операция заняла {seconds} сек. ({round(seconds / 60, 1)} мин.)\n"
                    f"Средняя скорость – {average_speed}")
-    await bot.send_message(ADMINS[0], f"Операция заняла {seconds} сек. ({round(seconds / 60, 2)} мин.)\n"
+    await bot.send_message(ADMINS[0], f"Ключ № {key_id}. Операция заняла {seconds} сек. ({round(seconds / 60, 1)} мин.)\n"
                                       f"Средняя скорость – {average_speed} k")
     await db.main.add_download_info(key_id, average_speed, seconds)
 
@@ -105,6 +105,8 @@ async def speed_test_key(key, key_id):
 
         await download_file(key_id)   # Функция скачивания файла (для замера скорости и времени)
 
+        time.sleep(2)
+
         # result = subprocess.run(['proxychains', 'speedtest-cli'],
         #                         capture_output=True, text=True)
         # # logger.debug(result)
@@ -141,6 +143,8 @@ async def speed_test_key(key, key_id):
         return
 
     finally:
+        time.sleep(1)
+
         # Останавливаем ss-local
         ss_local.terminate()
         logger.debug('ss_local.terminate')
@@ -153,4 +157,4 @@ async def speed_test_key(key, key_id):
         except Exception as e:
             logger.error(f'Ошибка удаления файлов: {e}')
 
-        time.sleep(3)
+        time.sleep(2)
