@@ -24,7 +24,7 @@ async def setup_scheduler(_):
 
 @logger.catch
 async def on_startup(_):
-    await bot.send_message(ADMINS[0], "VPN.AXO.Bot is running!")
+    await bot.send_message(ADMINS[0], "Speed-Test.VPN.AXO is running!")
     logger.success(f"Start speed-test")
     await setup_scheduler(dp)
 

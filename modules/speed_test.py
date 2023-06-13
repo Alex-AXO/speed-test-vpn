@@ -11,7 +11,7 @@ import time
 
 import db.main
 from initbot import bot
-from config import FILE, PORT, ADMINS
+from config import FILE, PORT, ADMINS, MODE
 
 
 @logger.catch
@@ -46,8 +46,12 @@ async def speed_test_cli(key_id, server_name):
     """Замеряем скорость через speedtest-cli"""
     logger.debug(f"speedtest-cli started")
 
-    try:    # UPDATE: proxychains4 --> proxychains
-        result = subprocess.run(['proxychains', 'speedtest-cli'],
+    try:
+        if MODE == 2:
+            proxychains = 'proxychains4'
+        else:
+            proxychains = 'proxychains'
+        result = subprocess.run([proxychains, 'speedtest-cli'],
                                 capture_output=True, text=True)
         # logger.debug(result)
 
@@ -70,7 +74,9 @@ async def speed_test_cli(key_id, server_name):
     download_speed = convert_to_mbits(download_speed)
     upload_speed = convert_to_mbits(upload_speed)
 
-    report = f'speedtest-cli result:\n{ping=}, {download_speed=} Mbit/s, {upload_speed=} Mbit/s'
+    report = f'speedtest-cli result: {ping=} ms,\n' \
+             f'{download_speed=} Mbit/s,\n' \
+             f'{upload_speed=} Mbit/s'
     logger.debug(report)
     await bot.send_message(ADMINS[0], report)
     await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)
@@ -90,29 +96,43 @@ async def download_file(key_id, server_name):
         # Мы можем получить количество секунд с помощью метода total_seconds()
         seconds = round((end_time - start_time).total_seconds())
     except Exception as e:
-        logger.error(f'Error curl-download: {e}')
+        report = f'Error curl-download: {e}'
+        logger.error(report)
         await db.main.add_download_info(key_id, 0, 0, 1)
-        await bot.send_message(ADMINS[0], f"Error curl-download: {e}")
+        await bot.send_message(ADMINS[0], report)
         return
 
     try:
         # print(result.stderr)
         # print(result.stderr.split('\n'))
+        logger.debug(result)
         last_row = result.stderr.split('\n')[-2].split()  # Получаем последнюю строку в выводе curl
         logger.debug(last_row)
 
     except Exception as e:
-        logger.error(f'Failed to get speed and time from strings. Error: {e}')
-        logger.error(f'Строка:\n{result.stderr}')
-        await bot.send_message(ADMINS[0], f"Failed to get speed and time from strings. Error: {e}")
+        report = f'Failed to get speed and time from strings. Error: {e}'
+        logger.error(report)
+        logger.error(f'String:\n{result.stderr}')
+        await bot.send_message(ADMINS[0], report)
         return
 
-    average_speed = last_row[-6]    # Извлечение последнего вхождения скорости из строки
+    try:
+        average_speed = last_row[-6]    # Извлечение последнего вхождения скорости из строки
+        logger.debug(f'{average_speed=}')
+        numbers = float(average_speed[:-1])
+        logger.debug(f'{numbers=}')
+
+    except Exception as e:
+        logger.error(f"Can't get speed: {e}")
+        await db.main.add_download_info(key_id, 0, 0, 1)
+        await bot.send_message(ADMINS[0], f"Error curl-download: {e}")
+        return
 
     average_speed = convert_speed_to_kilobytes(average_speed)   # Преобразование средней скорости в килобайты
 
-    report = f"Ключ № {key_id} | {server_name}:\nОперация заняла {seconds} сек. ({round(seconds / 60, 1)} мин.),\n"\
-             f"Средняя скорость – {average_speed} k."
+    report = f"{server_name} | key №{key_id}:\n" \
+             f"The operation took {seconds} sec. ({round(seconds / 60, 1)} мин.),\n"\
+             f"The average speed is {round(average_speed / 1024, 2)} MB/s."
     logger.success(report)
     await bot.send_message(ADMINS[0], report)
     await db.main.add_download_info(key_id, average_speed, seconds)
@@ -120,6 +140,8 @@ async def download_file(key_id, server_name):
 
 @logger.catch
 async def speed_test_key(key, key_id, server_name):
+    """Main function"""
+    time.sleep(2)
 
     # Расшифровываем ключ
     key = key[5:]  # Удаляем 'ss://'
@@ -148,9 +170,11 @@ async def speed_test_key(key, key_id, server_name):
     with open('config.json', 'w') as f:
         f.write(config_str)     # Запишем конфигурацию в файл
 
+    time.sleep(1)
     try:    # Попытка подключения к серверу VPN
         # Запускаем ss-local, указывая путь к временному файлу
         ss_local = subprocess.Popen(['ss-local', '-v', '-c', 'config.json'])
+        logger.debug(f'{ss_local=}')
 
         time.sleep(4)
 
@@ -160,17 +184,23 @@ async def speed_test_key(key, key_id, server_name):
 
         await speed_test_cli(key_id, server_name)  # Функция измерения скорости через speedtest-cli
 
+    except KeyboardInterrupt:
+        # Когда нажимается Ctrl + C, мы попадаем сюда
+        print("Interrupted by user, shutting down.")
+        # if ss_local.poll() is None:  # если процесс еще выполняется
+        #     ss_local.terminate()  # остановить его
+        #     logger.debug('ss_local.terminate (KeyboardInterrupt)')
+        # return
+
     except Exception as e:
         logger.error(f"It is impossible to connect to the server, download the file and receive data. Error: {e}")
         await bot.send_message(ADMINS[0], f"It is impossible to connect to the server, download the file and receive data. Error:: {e}")
-        return
 
     finally:
-        time.sleep(1)
 
         # Останавливаем ss-local
         ss_local.terminate()
-        logger.debug('ss_local.terminate')
+        logger.debug('ss_local.terminate (finally)')
 
         try:
             # В конце удаляем временный файл
@@ -179,5 +209,3 @@ async def speed_test_key(key, key_id, server_name):
 
         except Exception as e:
             logger.error(f'Ошибка удаления файлов: {e}')
-
-        time.sleep(2)

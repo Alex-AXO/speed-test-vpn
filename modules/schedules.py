@@ -1,7 +1,7 @@
 from loguru import logger
 
 from modules.speed_test import speed_test_key
-from config import FILE
+from config import FILE, MODE
 import db
 
 
@@ -20,6 +20,7 @@ async def speed_tests():
         logger.debug(f'{server_name=}, {key_id=}')
         await speed_test_key(key, key_id, server_name)
         logger.debug('')
-        # break   # Остановка после проверки первого ключа для тестирования
+        if MODE == 2:
+            break   # Остановка после проверки первого ключа для тестирования
 
     logger.debug(f'End')
