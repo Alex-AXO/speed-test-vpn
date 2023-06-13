@@ -26,7 +26,7 @@ async def add_new_key(message: types.Message):
 @logger.catch
 @dp.message_handler(commands="test", is_admin=True)
 async def test_start(message):
-    await message.answer('Start speed_test...')
+    # await message.answer('Start speed_test...')
     await speed_tests()
 
 

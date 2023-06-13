@@ -1,13 +1,15 @@
 from loguru import logger
 
 from modules.speed_test import speed_test_key
-from config import FILE, MODE
+from config import FILE, MODE, ADMINS
+from initbot import dp, bot
 import db
 
 
 async def speed_tests():
-    logger.debug(f'Start')
+    logger.debug(f'Start speed-tests...')
     logger.debug(f'Test-file: {FILE}')
+    await bot.send_message(ADMINS[0], 'Start speed_tests...\nTakes ~15 min.')
 
     keys = await db.main.get_server_keys()
     # print(keys)
