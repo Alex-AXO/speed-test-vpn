@@ -78,7 +78,7 @@ async def speed_test_cli(key_id, server_name):
              f'{download_speed=} Mbit/s,\n' \
              f'{upload_speed=} Mbit/s'
     logger.debug(report)
-    await bot.send_message(ADMINS[0], report)
+    # await bot.send_message(ADMINS[0], report)
     await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)
 
 
@@ -134,7 +134,7 @@ async def download_file(key_id, server_name):
              f"The operation took {seconds} sec. ({round(seconds / 60, 1)} мин.),\n"\
              f"The average speed is {round(average_speed / 1024, 2)} MB/s."
     logger.success(report)
-    await bot.send_message(ADMINS[0], report)
+    # await bot.send_message(ADMINS[0], report)
     await db.main.add_download_info(key_id, average_speed, seconds)
 
 
@@ -193,8 +193,9 @@ async def speed_test_key(key, key_id, server_name):
         # return
 
     except Exception as e:
-        logger.error(f"It is impossible to connect to the server, download the file and receive data. Error: {e}")
-        await bot.send_message(ADMINS[0], f"It is impossible to connect to the server, download the file and receive data. Error:: {e}")
+        report = f"It is impossible to connect to the server, download the file and receive data. Error: {e}"
+        logger.error(report)
+        await bot.send_message(ADMINS[0], report)
 
     finally:
 
