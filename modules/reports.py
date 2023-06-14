@@ -19,7 +19,7 @@ from config import FILE, PORT, ADMINS, MODE
 @logger.catch
 async def week_report_1(days=7):
     """Отчёт по всем серверам за неделю / curl - download file"""
-    await bot.send_message(ADMINS[0], f'week_report_1 | {days=}')
+    await bot.send_message(ADMINS[0], f'download_file report | {days=}')
     logger.debug(f'download_file report | {days=}')
 
     # Получить данные из обеих функций
@@ -46,13 +46,12 @@ async def week_report_1(days=7):
         avg_time = round(data['avg_time'], 1)
         server_name = (await db.main.get_server_name(key_id))[0]
 
-        log_text = f'''{key_id=}
-{server_name} | download speed: {avg_speed} MB/s | time: {avg_time} sec. | errors: {data['error_count']}
-'''
+        log_text = f'''{key_id=} | {server_name}
+| download speed: {avg_speed} MB/s | time: {avg_time} sec. | errors: {data['error_count']}'''
         logger.debug(log_text)
         report = f'''
-<b>{server_name}</b>  |  {key_id=}
-{avg_speed} MB/s  |  {avg_time} sec.  |  errors: {data['error_count']}
+<b>{server_name}</b>  |  errors: {data['error_count']}
+{avg_speed} MB/s  |  {avg_time} sec. 
 '''
         await bot.send_message(ADMINS[0], report)
 
@@ -60,7 +59,7 @@ async def week_report_1(days=7):
 @logger.catch
 async def week_report_2(days=7):
     """Отчёт по всем серверам за неделю / speedtest-cli"""
-    await bot.send_message(ADMINS[0], f'week_report_2 | {days=}')
+    await bot.send_message(ADMINS[0], f'speedtest-cli report | {days=}')
     logger.debug(f'speedtest-cli report | {days=}')
 
     # Получить данные из обеих функций
@@ -89,13 +88,12 @@ async def week_report_2(days=7):
         avg_upload = round(data['avg_upload'])
         server_name = (await db.main.get_server_name(key_id))[0]
 
-        log_text = f'''{key_id=}
-{server_name} | {avg_ping=} ms | {avg_download=} Mb/s | {avg_upload=} Mb/s | errors: {data['error_count']}
-'''
+        log_text = f'''{key_id=} | {server_name} 
+| {avg_ping=} ms | {avg_download=} Mb/s | {avg_upload=} Mb/s | errors: {data['error_count']}'''
         logger.debug(log_text)
 
         report = f'''
-<b>{server_name}</b>  |  {key_id=}
-{avg_ping} ms | {avg_download} MB/s | {avg_upload} Mb/s | errors: {data['error_count']}
+<b>{server_name}</b> | errors: {data['error_count']}
+{avg_ping} ms  |  {avg_download} MB/s  |  {avg_upload} Mb/s
 '''
         await bot.send_message(ADMINS[0], report)
