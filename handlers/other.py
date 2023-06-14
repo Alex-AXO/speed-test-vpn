@@ -2,7 +2,7 @@ from loguru import logger
 from aiogram import types
 
 import db.main
-from modules.reports import week_report
+from modules.reports import week_report_1, week_report_2
 from modules.schedules import speed_tests
 from initbot import dp, bot
 
@@ -32,10 +32,37 @@ async def test_start(message):
 
 
 @logger.catch
-@dp.message_handler(commands="week", is_admin=True)
+@dp.message_handler(commands="week1", is_admin=True)
 async def test_start(message):
-    # await message.answer('Start speed_test...')
-    await week_report()
+    try:
+        days = message.text.split()[1]
+    except Exception as e:
+        days = 7
+    await week_report_1(days)
+
+
+@logger.catch
+@dp.message_handler(commands="week2", is_admin=True)
+async def test_start(message):
+    try:
+        days = message.text.split()[1]
+    except Exception as e:
+        days = 7
+    await week_report_2(days)
+
+
+# - - -
+
+
+@logger.catch
+@dp.message_handler(commands="help", is_admin=True)
+async def test_start(message):
+    report = f'''
+/test – принудительное тестирование
+/week1 10 – отчёт 1 / 10 дней
+/week2 10 – отчёт 2 / 10 дней
+'''
+    await message.answer(report)
 
 
 @logger.catch

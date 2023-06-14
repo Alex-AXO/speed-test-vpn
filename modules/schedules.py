@@ -22,7 +22,7 @@ async def speed_tests():
         logger.debug(f'{server_name=}, {key_id=}')
         await speed_test_key(key, key_id, server_name)
         logger.debug('')
-        if MODE == 2:
-            break   # Остановка после проверки первого ключа для тестирования
+        # if MODE == 2:
+        #     break   # Остановка после проверки первого ключа для тестирования
 
     logger.debug(f'End')
