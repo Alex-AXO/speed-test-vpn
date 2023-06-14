@@ -1,3 +1,5 @@
+from datetime import date
+
 import aiosqlite
 
 from initbot import logger
@@ -25,6 +27,9 @@ async def get_server_name(key_id):
                 "WHERE key_id = ?", (key_id, )) as result:
             result = await result.fetchone()
             return result if result else None
+
+
+# - - -
 
 
 @logger.catch
@@ -63,8 +68,11 @@ async def add_speedtest_info(key_id, ping, download_speed, upload_speed, error=0
             return result
 
 
+# - - -
+
+
 @logger.catch
-async def get_download_info_week(days):
+async def get_download_info_last(days):
     """Получение информации (статистики) за неделю по скачиванию файла по серверам за неделю"""
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
@@ -82,7 +90,7 @@ async def get_download_info_week(days):
 
 
 @logger.catch
-async def get_download_errors_week(days):
+async def get_download_errors_last(days):
     """Получение кол-ва ошибок за неделю (по скачиванию файла) по серверам за неделю"""
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
@@ -98,7 +106,7 @@ async def get_download_errors_week(days):
 
 
 @logger.catch
-async def get_speedtest_info_week(days):
+async def get_speedtest_info_last(days):
     """Получение информации (статистики) за неделю по скачиванию файла по серверам за неделю"""
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
@@ -117,7 +125,7 @@ async def get_speedtest_info_week(days):
 
 
 @logger.catch
-async def get_speedtest_errors_week(days):
+async def get_speedtest_errors_last(days):
     """Получение кол-ва ошибок за неделю (по скачиванию файла) по серверам за неделю"""
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
@@ -128,5 +136,165 @@ async def get_speedtest_errors_week(days):
         WHERE 
             date_time >= datetime('now', ?)
         GROUP BY key_id;""", (f'-{days} days',)) as result:
+            result = await result.fetchall()
+            return result if result else []
+
+
+# - - -
+
+
+@logger.catch
+async def get_speedtest_info_week(week):
+    """Получение информации (статистики) за указанную неделю | speedtest-cli"""
+    year = date.today().year
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+        SELECT 
+            key_id, 
+            AVG(ping) as avg_ping,
+            AVG(download_speed) as avg_download, 
+            AVG(upload_speed) as avg_upload
+        FROM speed_tests 
+        WHERE 
+            strftime('%Y', date_time) = ? AND
+            strftime('%W', date_time) = ? AND 
+            error = 0
+        GROUP BY key_id;""", (str(year), str(week).zfill(2))) as result:
+            result = await result.fetchall()
+            return result if result else []
+
+
+@logger.catch
+async def get_speedtest_errors_week(week):
+    """Получение информации (статистики) за указанную неделю | speedtest-cli"""
+    year = date.today().year
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+        SELECT 
+            key_id, 
+            SUM(CASE WHEN error = 1 THEN 1 ELSE 0 END) as error_count
+        FROM speed_tests 
+        WHERE 
+            strftime('%Y', date_time) = ? AND
+            strftime('%W', date_time) = ? 
+        GROUP BY key_id;""", (str(year), str(week).zfill(2))) as result:
+            result = await result.fetchall()
+            return result if result else []
+
+
+@logger.catch
+async def get_download_info_week(week):
+    """Получение информации (статистики) за указанную неделю по скачиванию файла по серверам"""
+    year = date.today().year
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+        SELECT 
+            key_id, 
+            AVG(download_speed) as avg_download, 
+            AVG(time) as avg_time
+        FROM download_files 
+        WHERE 
+            strftime('%Y', date_time) = ? AND
+            strftime('%W', date_time) = ? AND 
+            error = 0
+        GROUP BY key_id;""", (str(year), str(week).zfill(2))) as result:
+            result = await result.fetchall()
+            return result if result else []
+
+
+@logger.catch
+async def get_download_errors_week(week):
+    """Получение информации (статистики) за указанную неделю по скачиванию файла по серверам"""
+    year = date.today().year
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+        SELECT 
+            key_id, 
+            SUM(CASE WHEN error = 1 THEN 1 ELSE 0 END) as error_count
+        FROM download_files 
+        WHERE 
+            strftime('%Y', date_time) = ? AND
+            strftime('%W', date_time) = ? 
+        GROUP BY key_id;""", (str(year), str(week).zfill(2))) as result:
+            result = await result.fetchall()
+            return result if result else []
+
+
+# - - -
+
+
+@logger.catch
+async def get_speedtest_info_month(month):
+    """Получение информации (статистики) за указанный месяц | speedtest-cli"""
+    year = date.today().year
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+        SELECT 
+            key_id, 
+            AVG(ping) as avg_ping,
+            AVG(download_speed) as avg_download, 
+            AVG(upload_speed) as avg_upload
+        FROM speed_tests 
+        WHERE 
+            strftime('%Y', date_time) = ? AND
+            strftime('%m', date_time) = ? AND 
+            error = 0
+        GROUP BY key_id;""", (str(year), str(month).zfill(2))) as result:
+            result = await result.fetchall()
+            return result if result else []
+
+
+@logger.catch
+async def get_speedtest_errors_month(month):
+    """Получение информации (статистики) за указанный месяц | speedtest-cli"""
+    year = date.today().year
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+        SELECT 
+            key_id, 
+            SUM(CASE WHEN error = 1 THEN 1 ELSE 0 END) as error_count
+        FROM speed_tests 
+        WHERE 
+            strftime('%Y', date_time) = ? AND
+            strftime('%m', date_time) = ? 
+        GROUP BY key_id;""", (str(year), str(month).zfill(2))) as result:
+            result = await result.fetchall()
+            return result if result else []
+
+
+@logger.catch
+async def get_download_info_month(month):
+    """Получение информации (статистики) за указанный месяц по скачиванию файла по серверам"""
+    year = date.today().year
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+        SELECT 
+            key_id, 
+            AVG(download_speed) as avg_download, 
+            AVG(time) as avg_time
+        FROM download_files 
+        WHERE 
+            strftime('%Y', date_time) = ? AND
+            strftime('%m', date_time) = ? AND 
+            error = 0
+        GROUP BY key_id;""", (str(year), str(month).zfill(2))) as result:
+            result = await result.fetchall()
+            return result if result else []
+
+
+@logger.catch
+async def get_download_errors_month(month):
+    """Получение информации (статистики) за указанный месяц по скачиванию файла по серверам"""
+    year = date.today().year
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+        SELECT 
+            key_id, 
+            SUM(CASE WHEN error = 1 THEN 1 ELSE 0 END) as error_count
+        FROM download_files 
+        WHERE 
+            strftime('%Y', date_time) = ? AND
+            strftime('%m', date_time) = ? 
+        GROUP BY key_id;""", (str(year), str(month).zfill(2))) as result:
             result = await result.fetchall()
             return result if result else []

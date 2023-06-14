@@ -1,8 +1,10 @@
+from datetime import date, datetime
+
 from loguru import logger
 from aiogram import types
 
 import db.main
-from modules.reports import week_report_1, week_report_2
+from modules import reports
 from modules.schedules import speed_tests
 from initbot import dp, bot
 
@@ -32,35 +34,53 @@ async def test_start(message):
 
 
 @logger.catch
-@dp.message_handler(commands="week1", is_admin=True)
-async def test_start(message):
+@dp.message_handler(commands="last", is_admin=True)
+async def last1(message):
     try:
         days = message.text.split()[1]
     except Exception as e:
         days = 7
-    await week_report_1(days)
+    await reports.last_report(days)
 
 
 @logger.catch
-@dp.message_handler(commands="week2", is_admin=True)
-async def test_start(message):
+@dp.message_handler(commands="week", is_admin=True)
+async def week_func(message):
     try:
-        days = message.text.split()[1]
+        week = message.text.split()[1]
     except Exception as e:
-        days = 7
-    await week_report_2(days)
+        week = date.today().isocalendar()[1]
+
+    await bot.send_message(ADMINS[0], f'{week=}')
+    logger.debug(f'week-command | {week=}')
+    await reports.week_report(week)
 
 
-# - - -
+@logger.catch
+@dp.message_handler(commands="month", is_admin=True)
+async def month_func(message):
+    try:
+        month = message.text.split()[1]
+    except Exception as e:
+        month = datetime.now().month
+
+    await bot.send_message(ADMINS[0], f'{month=}')
+    logger.debug(f'month-command | {month=}')
+    await reports.month_report(month)
+
+
+# --- --- ---
 
 
 @logger.catch
 @dp.message_handler(commands="help", is_admin=True)
-async def test_start(message):
+async def help_command(message):
     report = f'''
+/add – добавить ключ-сервера
 /test – принудительное тестирование
-/week1 10 – отчёт 1 / 10 дней
-/week2 10 – отчёт 2 / 10 дней
+/last 14 – отчёт за последн. 14 дней
+/week 21 – отчёт за 21 неделю
+/month 3 – отчёт за 3 месяц
 '''
     await message.answer(report)
 
