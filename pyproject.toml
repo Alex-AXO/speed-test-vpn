@@ -16,6 +16,7 @@ aiogram = "^2.25.1"
 python-dotenv = "^1.0.0"
 apscheduler = "^3.10.1"
 aiosqlite = "^0.19.0"
+#gspread = "^5.9.0"
 
 [build-system]
 requires = ["poetry-core"]

@@ -74,7 +74,8 @@ async def speed_test_cli(key_id, server_name):
     download_speed = convert_to_mbits(download_speed)
     upload_speed = convert_to_mbits(upload_speed)
 
-    report = f'speedtest-cli result: {ping=} ms,\n' \
+    report = f'speedtest-cli result:\n' \
+             f'{ping=} ms,\n' \
              f'{download_speed=} Mbit/s,\n' \
              f'{upload_speed=} Mbit/s'
     logger.debug(report)
@@ -103,9 +104,7 @@ async def download_file(key_id, server_name):
         return
 
     try:
-        # print(result.stderr)
-        # print(result.stderr.split('\n'))
-        logger.debug(result)
+        # logger.debug(result.stderr)
         last_row = result.stderr.split('\n')[-2].split()  # Получаем последнюю строку в выводе curl
         logger.debug(last_row)
 

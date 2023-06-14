@@ -2,6 +2,7 @@ from loguru import logger
 from aiogram import types
 
 import db.main
+from modules.reports import week_report
 from modules.schedules import speed_tests
 from initbot import dp, bot
 
@@ -28,6 +29,13 @@ async def add_new_key(message: types.Message):
 async def test_start(message):
     # await message.answer('Start speed_test...')
     await speed_tests()
+
+
+@logger.catch
+@dp.message_handler(commands="week", is_admin=True)
+async def test_start(message):
+    # await message.answer('Start speed_test...')
+    await week_report()
 
 
 @logger.catch
