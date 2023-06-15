@@ -139,7 +139,7 @@ async def download_file(key_id, server_name):
 
 @logger.catch
 async def speed_test_key(key, key_id, server_name):
-    """Main function"""
+    """Main function for new speedtest-cli and download file (curl)"""
     time.sleep(2)
 
     # Расшифровываем ключ

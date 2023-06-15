@@ -110,6 +110,16 @@ async def get_speedtest_info_last(days):
     """Получение информации (статистики) за неделю по скачиванию файла по серверам за неделю"""
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
+        SELECT
+            MIN(date_time),
+            MAX(date_time)
+        FROM speed_tests
+        WHERE
+            date_time >= datetime('now', ?) AND 
+            error = 0;""", (f'-{days} days',)) as result:
+            min_date, max_date = await result.fetchone()
+
+        async with db.execute("""
         SELECT 
             key_id, 
             AVG(ping) as avg_ping,
@@ -121,7 +131,7 @@ async def get_speedtest_info_last(days):
             error = 0
         GROUP BY key_id;""", (f'-{days} days',)) as result:
             result = await result.fetchall()
-            return result if result else []
+            return result, min_date, max_date if result else []
 
 
 @logger.catch
@@ -148,6 +158,18 @@ async def get_speedtest_info_week(week):
     """Получение информации (статистики) за указанную неделю | speedtest-cli"""
     year = date.today().year
     async with aiosqlite.connect(DB_PATH) as db:
+        # запрос для получения минимальной и максимальной дат
+        async with db.execute("""
+        SELECT
+            MIN(date_time),
+            MAX(date_time)
+        FROM speed_tests
+        WHERE
+            strftime('%Y', date_time) = ? AND
+            strftime('%W', date_time) = ? AND
+            error = 0;""", (str(year), str(week).zfill(2))) as result:
+            min_date, max_date = await result.fetchone()
+
         async with db.execute("""
         SELECT 
             key_id, 
@@ -161,7 +183,7 @@ async def get_speedtest_info_week(week):
             error = 0
         GROUP BY key_id;""", (str(year), str(week).zfill(2))) as result:
             result = await result.fetchall()
-            return result if result else []
+            return result, min_date, max_date if result else []
 
 
 @logger.catch

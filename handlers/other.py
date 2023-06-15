@@ -51,7 +51,6 @@ async def week_func(message):
     except Exception as e:
         week = date.today().isocalendar()[1]
 
-    await bot.send_message(ADMINS[0], f'{week=}')
     logger.debug(f'week-command | {week=}')
     await reports.week_report(week)
 
