@@ -1,6 +1,7 @@
 from loguru import logger
 from aiogram.utils import executor
 
+import handlers.keyboard
 from config import ADMINS
 import modules
 from initbot import scheduler, bot, dp
@@ -24,7 +25,7 @@ async def setup_scheduler(_):
 
 @logger.catch
 async def on_startup(_):
-    await bot.send_message(ADMINS[0], "Speed-Test.VPN.AXO is running!")
+    await bot.send_message(ADMINS[0], "Speed-Test.VPN.AXO is running!", reply_markup=handlers.keyboard.main)
     logger.success(f"Start speed-test")
     await setup_scheduler(dp)
 

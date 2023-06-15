@@ -12,6 +12,7 @@ import time
 # import gspread
 
 import db.main
+import handlers
 from initbot import bot
 from config import FILE, PORT, ADMINS, MODE
 
@@ -21,15 +22,13 @@ async def last_report(days=7):
     """Отчёт по всем серверам за неделю / curl - download file"""
     logger.debug(f'last report | {days=}')
 
-    # Получить данные из обеих функций
     speedtest_info_last = await db.main.get_speedtest_info_last(days)
     # Get date
-    print(speedtest_info_last[0], '|', speedtest_info_last[1], '|', speedtest_info_last[2])
     min_date = (speedtest_info_last[1].split()[0]).split('-')
     max_date = (speedtest_info_last[2].split()[0]).split('-')
     min_date = f'{min_date[2]}.{min_date[1]}'
     max_date = f'{max_date[2]}.{max_date[1]}.{max_date[0]}'
-    await bot.send_message(ADMINS[0], f'{days=} | {min_date}–{max_date}')
+    await bot.send_message(ADMINS[0], f'{days=} | {min_date}–{max_date}', reply_markup=handlers.keyboard.main)
 
     speedtest_errors_last = await db.main.get_speedtest_errors_last(days)
 
@@ -47,7 +46,6 @@ async def week_report(week):
     speedtest_info_week = await db.main.get_speedtest_info_week(week)
 
     # Get date
-    print(speedtest_info_week[0], '|', speedtest_info_week[1], '|', speedtest_info_week[2])
     min_date = (speedtest_info_week[1].split()[0]).split('-')
     max_date = (speedtest_info_week[2].split()[0]).split('-')
     min_date = f'{min_date[2]}.{min_date[1]}'
