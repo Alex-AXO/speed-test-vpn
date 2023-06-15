@@ -2,7 +2,7 @@ from loguru import logger
 from aiogram.utils import executor
 
 import handlers.keyboard
-from config import ADMINS
+from config import ADMINS, HOURS
 import modules
 from initbot import scheduler, bot, dp
 
@@ -10,15 +10,15 @@ from initbot import scheduler, bot, dp
 @logger.catch
 async def setup_scheduler(_):
     # scheduler.add_job(modules.schedules.speed_tests, "interval", seconds=5000)
-    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=0, minute=11,
+    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=0+HOURS, minute=11,
                       timezone="Europe/Moscow")  # Свободные слоты для ключей
-    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=5, minute=11,
+    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=5+HOURS, minute=11,
                       timezone="Europe/Moscow")  # Свободные слоты для ключей
-    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=10, minute=11,
+    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=10+HOURS, minute=11,
                       timezone="Europe/Moscow")  # Свободные слоты для ключей
-    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=15, minute=11,
+    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=15+HOURS, minute=11,
                       timezone="Europe/Moscow")  # Свободные слоты для ключей
-    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=20, minute=11,
+    scheduler.add_job(modules.schedules.speed_tests, "cron", hour=20+HOURS, minute=11,
                       timezone="Europe/Moscow")  # Свободные слоты для ключей
     scheduler.start()
 
