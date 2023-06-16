@@ -53,7 +53,6 @@ async def speed_test_cli(key_id, server_name):
             proxychains = 'proxychains'
         result = subprocess.run([proxychains, 'speedtest-cli'],
                                 capture_output=True, text=True)
-        # logger.debug(result)
 
         # Извлечение содержимого stdout
         output = result.stdout
@@ -65,14 +64,21 @@ async def speed_test_cli(key_id, server_name):
         await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
         return
 
-    # Ищем в строке:
-    ping = re.findall(r"(\d+(?:\.\d+)?) ms", output)[0]
-    download_speed = re.findall(r"Download: (\d+\.\d+ .bit/s)", output)[0]
-    upload_speed = re.findall(r"Upload: (\d+\.\d+ .bit/s)", output)[0]
+    try:
+        # Ищем в строке:
+        ping = re.findall(r"(\d+(?:\.\d+)?) ms", output)[0]
+        download_speed = re.findall(r"Download: (\d+\.\d+ .bit/s)", output)[0]
+        upload_speed = re.findall(r"Upload: (\d+\.\d+ .bit/s)", output)[0]
 
-    ping = round(float(ping))
-    download_speed = convert_to_mbits(download_speed)
-    upload_speed = convert_to_mbits(upload_speed)
+        ping = round(float(ping))
+        download_speed = convert_to_mbits(download_speed)
+        upload_speed = convert_to_mbits(upload_speed)
+    except Exception as e:
+        report = f"Can't get result from string. Error: {e}"
+        logger.error(report)
+        logger.debug(f'{output=}')
+        await bot.send_message(ADMINS[0], report)
+        return
 
     report = f'speedtest-cli result:\n' \
              f'{ping=} ms,\n' \
