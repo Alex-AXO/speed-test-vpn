@@ -46,25 +46,18 @@ async def speed_test_cli(key_id, server_name):
     """Замеряем скорость через speedtest-cli"""
     logger.debug(f"speedtest-cli started")
 
+    if MODE == 2:
+        proxychains = 'proxychains4'
+    else:
+        proxychains = 'proxychains'
+
     try:
-        if MODE == 2:
-            proxychains = 'proxychains4'
-        else:
-            proxychains = 'proxychains'
         result = subprocess.run([proxychains, 'speedtest-cli'],
                                 capture_output=True, text=True)
 
         # Извлечение содержимого stdout
         output = result.stdout
 
-    except Exception as e:
-        report = f'Error proxychains speedtest-cli: {e}'
-        logger.error(report)
-        await bot.send_message(ADMINS[0], report)
-        await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
-        return
-
-    try:
         # Ищем в строке:
         ping = re.findall(r"(\d+(?:\.\d+)?) ms", output)[0]
         download_speed = re.findall(r"Download: (\d+\.\d+ .bit/s)", output)[0]
@@ -73,20 +66,21 @@ async def speed_test_cli(key_id, server_name):
         ping = round(float(ping))
         download_speed = convert_to_mbits(download_speed)
         upload_speed = convert_to_mbits(upload_speed)
+
+        report = f'speedtest-cli result:\n' \
+                 f'{ping=} ms,\n' \
+                 f'{download_speed=} Mbit/s,\n' \
+                 f'{upload_speed=} Mbit/s'
+        logger.debug(report)
+        # await bot.send_message(ADMINS[0], report)
+        await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)
+
     except Exception as e:
-        report = f"Can't get result from string. Error: {e}"
+        await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
+        report = f'Error proxychains speedtest-cli: {e}'
         logger.error(report)
-        logger.debug(f'{output=}')
         await bot.send_message(ADMINS[0], report)
         return
-
-    report = f'speedtest-cli result:\n' \
-             f'{ping=} ms,\n' \
-             f'{download_speed=} Mbit/s,\n' \
-             f'{upload_speed=} Mbit/s'
-    logger.debug(report)
-    # await bot.send_message(ADMINS[0], report)
-    await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)
 
 
 @logger.catch
@@ -102,45 +96,27 @@ async def download_file(key_id, server_name):
 
         # Мы можем получить количество секунд с помощью метода total_seconds()
         seconds = round((end_time - start_time).total_seconds())
-    except Exception as e:
-        report = f'Error curl-download: {e}'
-        logger.error(report)
-        await db.main.add_download_info(key_id, 0, 0, 1)
-        await bot.send_message(ADMINS[0], report)
-        return
 
-    try:
         # logger.debug(result.stderr)
         last_row = result.stderr.split('\n')[-2].split()  # Получаем последнюю строку в выводе curl
         logger.debug(last_row)
 
+        average_speed = last_row[-6]    # Извлечение последнего вхождения скорости из строки
+        average_speed = convert_speed_to_kilobytes(average_speed)   # Преобразование средней скорости в килобайты
+
+        report = f"{server_name} | key №{key_id}:\n" \
+                 f"The operation took {seconds} sec. ({round(seconds / 60, 1)} мин.),\n"\
+                 f"The average speed is {round(average_speed / 1024, 2)} MB/s."
+        logger.success(report)
+        # await bot.send_message(ADMINS[0], report)
+        await db.main.add_download_info(key_id, average_speed, seconds)     # Запись в БД результата
+
     except Exception as e:
-        report = f'Failed to get speed and time from strings. Error: {e}'
+        await db.main.add_download_info(key_id, 0, 0, 1)
+        report = f'Error curl-download: {e}'
         logger.error(report)
-        logger.error(f'String:\n{result.stderr}')
         await bot.send_message(ADMINS[0], report)
         return
-
-    try:
-        average_speed = last_row[-6]    # Извлечение последнего вхождения скорости из строки
-        logger.debug(f'{average_speed=}')
-        numbers = float(average_speed[:-1])
-        logger.debug(f'{numbers=}')
-
-    except Exception as e:
-        logger.error(f"Can't get speed: {e}")
-        await db.main.add_download_info(key_id, 0, 0, 1)
-        await bot.send_message(ADMINS[0], f"Error curl-download: {e}")
-        return
-
-    average_speed = convert_speed_to_kilobytes(average_speed)   # Преобразование средней скорости в килобайты
-
-    report = f"{server_name} | key №{key_id}:\n" \
-             f"The operation took {seconds} sec. ({round(seconds / 60, 1)} мин.),\n"\
-             f"The average speed is {round(average_speed / 1024, 2)} MB/s."
-    logger.success(report)
-    # await bot.send_message(ADMINS[0], report)
-    await db.main.add_download_info(key_id, average_speed, seconds)
 
 
 @logger.catch
