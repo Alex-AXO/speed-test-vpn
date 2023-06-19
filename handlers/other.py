@@ -75,7 +75,7 @@ async def month_func(message):
 @dp.message_handler(commands="help", is_admin=True)
 async def help_command(message):
     report = f'''
-Проверка в: 00:11, 05:11, 10:11, 15:11, 20:11 (+15 min.).
+Проверка в: 00:11, 05:11, 10:11, 15:11, 20:11 (msk, +15 min.).
 
 /add – добавить ключ-сервера
 /test – принудительное тестирование

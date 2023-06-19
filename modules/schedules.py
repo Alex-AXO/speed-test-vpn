@@ -35,12 +35,12 @@ async def is_new_data():
 
     table = 'speed_tests'
     if not await db.main.check_new_rows(table):
-        report = f'No data was added to the table: {table}'
+        report = f'No (or small) data was added (for day) to the table: {table}'
         logger.error(report)
         await bot.send_message(ADMINS[0], report)
 
     table = 'download_files'
     if not await db.main.check_new_rows(table):
-        report = f'No data was added to the table: {table}'
+        report = f'No (or small) data was added (for day) to the table: {table}'
         logger.error(report)
         await bot.send_message(ADMINS[0], report)
