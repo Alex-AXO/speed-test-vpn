@@ -34,13 +34,13 @@ async def is_new_data():
     logger.debug(f'is_new_data test')
 
     table = 'speed_tests'
-    if not db.main.check_new_rows(table):
+    if not await db.main.check_new_rows(table):
         report = f'No data was added to the table: {table}'
         logger.error(report)
         await bot.send_message(ADMINS[0], report)
 
     table = 'download_files'
-    if not db.main.check_new_rows(table):
+    if not await db.main.check_new_rows(table):
         report = f'No data was added to the table: {table}'
         logger.error(report)
         await bot.send_message(ADMINS[0], report)

@@ -334,7 +334,8 @@ async def check_new_rows(table):
         async with db.execute("SELECT COUNT(*) "
                               f"FROM {table} "
                               "WHERE date_time BETWEEN ? AND ?", (yesterday, today)) as cursor:
-            new_rows = await cursor.fetchone()[0]
+            new_rows = await cursor.fetchone()
+            new_rows = new_rows[0]
 
     if new_rows >= NEW_ROWS_IN_DAY:
         return True
