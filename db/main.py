@@ -1,9 +1,10 @@
 from datetime import date
+from datetime import datetime, timedelta
 
 import aiosqlite
 
 from initbot import logger
-from config import DB_PATH
+from config import DB_PATH, NEW_ROWS_IN_DAY
 
 
 @logger.catch
@@ -320,3 +321,22 @@ async def get_download_errors_month(month):
         GROUP BY key_id;""", (str(year), str(month).zfill(2))) as result:
             result = await result.fetchall()
             return result if result else []
+
+
+@logger.catch
+async def check_new_rows(table):
+    """Проверяет, были ли добавлены новые строки в таблицу"""
+
+    today = datetime.now()
+    yesterday = today - timedelta(days=1)
+
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("SELECT COUNT(*) "
+                              f"FROM {table} "
+                              "WHERE date_time BETWEEN ? AND ?", (yesterday, today)) as cursor:
+            new_rows = await cursor.fetchone()[0]
+
+    if new_rows >= NEW_ROWS_IN_DAY:
+        return True
+    else:
+        return False
