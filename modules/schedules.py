@@ -8,9 +8,9 @@ import db
 
 @logger.catch
 async def speed_tests():
-    # logger.debug(f'Start speed-tests...')
+    logger.debug(f'Start speed-tests...')
     logger.debug(f'Test-file: {FILE}')
-    await bot.send_message(ADMINS[0], 'Start speed_tests...\nTakes ~15 min.')
+    # await bot.send_message(ADMINS[0], 'Start speed_tests...\nTakes ~15 min.')
 
     keys = await db.main.get_server_keys()
     # print(keys)
