@@ -31,20 +31,26 @@ def convert_to_mbits(speed_str):
 @logger.catch
 def convert_speed_to_kilobytes(speed: str) -> float:
     """Преобразование скорости скачивания в килобайты"""
-    if speed[-1] == 'k':
-        return float(speed[:-1])
-    elif speed[-1] == 'M':
-        return float(speed[:-1]) * 1024
-    elif speed[-1] == 'G':
-        return float(speed[:-1]) * 1024 * 1024
-    else:
-        return float(speed) / 1024
+    try:
+        if speed[-1] == 'k':
+            return float(speed[:-1])
+        elif speed[-1] == 'M':
+            return float(speed[:-1]) * 1024
+        elif speed[-1] == 'G':
+            return float(speed[:-1]) * 1024 * 1024
+        else:
+            return float(speed) / 1024
+    except Exception as e:
+        report = f'Error convert_speed_to_kilobytes(): {e}'
+        logger.error(report)
+        # await bot.send_message(ADMINS[0], report)
+        # return 0
 
 
 @logger.catch
 async def speed_test_cli(key_id, server_name):
     """Замеряем скорость через speedtest-cli"""
-    logger.debug(f"speedtest-cli started")
+    logger.debug(f"{server_name}: speedtest-cli started")
 
     if MODE == 2:
         proxychains = 'proxychains4'
@@ -77,7 +83,7 @@ async def speed_test_cli(key_id, server_name):
 
     except Exception as e:
         await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
-        report = f'Error proxychains speedtest-cli: {e}'
+        report = f'{server_name}: error proxychains speedtest-cli: {e}'
         logger.error(report)
         await bot.send_message(ADMINS[0], report)
         return
@@ -113,7 +119,7 @@ async def download_file(key_id, server_name):
 
     except Exception as e:
         await db.main.add_download_info(key_id, 0, 0, 1)
-        report = f'Error curl-download: {e}'
+        report = f'{server_name}: error curl-download: {e}'
         logger.error(report)
         await bot.send_message(ADMINS[0], report)
         return
@@ -174,12 +180,11 @@ async def speed_test_key(key, key_id, server_name):
         # return
 
     except Exception as e:
-        report = f"It is impossible to connect to the server, download the file and receive data. Error: {e}"
+        report = f"{server_name}: it is impossible to connect to the server, download the file and receive data. Error: {e}"
         logger.error(report)
         await bot.send_message(ADMINS[0], report)
 
     finally:
-
         # Останавливаем ss-local
         ss_local.terminate()
         logger.debug('ss_local.terminate (finally)')
