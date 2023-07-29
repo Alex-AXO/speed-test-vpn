@@ -29,7 +29,7 @@ async def add_new_key(message: types.Message):
 @logger.catch
 @dp.message_handler(commands="test", is_admin=True)
 async def test_start(message):
-    # await message.answer('Start speed_test...')
+    await message.answer('Start speed_test...')
     await speed_tests()
 
 
@@ -82,6 +82,9 @@ async def help_command(message):
 /last 14 – отчёт за последн. 14 дней
 /week 21 – отчёт за 21 неделю
 /month 3 – отчёт за 3 месяц
+
+Примеры:
+/add axo-outline-44 ss://...
 '''
     await message.answer(report)
 

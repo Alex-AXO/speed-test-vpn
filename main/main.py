@@ -9,7 +9,7 @@ from initbot import scheduler, bot, dp
 
 @logger.catch
 async def setup_scheduler(_):
-    # scheduler.add_job(modules.schedules.speed_tests, "interval", seconds=5000)
+    # scheduler.add_job(modules.schedules.speed_tests, "interval", seconds=15)
     scheduler.add_job(modules.schedules.speed_tests, "cron", hour=0+HOURS, minute=11,
                       timezone="Europe/Moscow")  # Свободные слоты для ключей
     scheduler.add_job(modules.schedules.speed_tests, "cron", hour=5+HOURS, minute=11,

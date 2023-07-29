@@ -96,7 +96,7 @@ async def download_file(key_id, server_name):
     try:
         start_time = datetime.now()
         result = subprocess.run(['curl', '-x', f'socks5h://localhost:{PORT}', '-O',
-                                 f'http://speedtest.wdc01.softlayer.com/downloads/{FILE}'],
+                                 f'https://1090023-cf48670.tmweb.ru/{FILE}'],
                                 capture_output=True, text=True)
         end_time = datetime.now()
 
