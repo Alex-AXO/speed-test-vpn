@@ -95,9 +95,8 @@ async def download_file(key_id, server_name):
 
     try:
         start_time = datetime.now()
-        result = subprocess.run(['curl', '-x', f'socks5h://localhost:{PORT}', '-O',
-                                 f'https://1090023-cf48670.tmweb.ru/{FILE}'],
-                                capture_output=True, text=True)
+        request = ['curl', '-x', f'socks5h://localhost:{PORT}', '-O', f'https://1090023-cf48670.tmweb.ru/{FILE}']
+        result = subprocess.run(request, capture_output=True, text=True)
         end_time = datetime.now()
 
         # Мы можем получить количество секунд с помощью метода total_seconds()
@@ -111,6 +110,8 @@ async def download_file(key_id, server_name):
         average_speed = convert_speed_to_kilobytes(average_speed)   # Преобразование средней скорости в килобайты
 
         report = f"{server_name} | key №{key_id}:\n" \
+                 f"Command: {' '.join(request[0:4])} + File \n" \
+                 f"File: {request[4]}\n" \
                  f"The operation took {seconds} sec. ({round(seconds / 60, 1)} мин.),\n"\
                  f"The average speed is {round(average_speed / 1024, 2)} MB/s."
         logger.success(report)
