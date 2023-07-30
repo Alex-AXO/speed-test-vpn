@@ -1,8 +1,8 @@
 from loguru import logger
 
 from modules.speed_test import speed_test_key
-from config import FILE, MODE, ADMINS
-from initbot import dp, bot
+from config import FILE, ADMINS
+from initbot import bot
 import db
 
 

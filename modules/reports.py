@@ -1,20 +1,9 @@
-from datetime import datetime
-
 from loguru import logger
-
-import base64
-import json
-import subprocess
-import re
-import os
-import time
-
-# import gspread
 
 import db.main
 import handlers
 from initbot import bot
-from config import FILE, PORT, ADMINS, MODE
+from config import ADMINS
 
 
 @logger.catch
@@ -81,7 +70,9 @@ async def show_data(speedtest_info, speedtest_errors, download_info, download_er
     """Вывод информации (статистики о серверах)"""
 
     # Преобразовать списки кортежей в словари для лёгкого доступа
-    speedtest_info_dict = {key_id: (avg_ping, avg_download, avg_upload) for key_id, avg_ping, avg_download, avg_upload in speedtest_info}
+    speedtest_info_dict = {
+        key_id: (avg_ping, avg_download, avg_upload) for key_id, avg_ping, avg_download, avg_upload in speedtest_info
+    }
     speedtest_errors_dict = {key_id: error_count for key_id, error_count in speedtest_errors}
 
     download_info_dict = {key_id: (avg_speed, avg_time) for key_id, avg_speed, avg_time in download_info}
