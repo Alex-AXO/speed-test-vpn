@@ -14,7 +14,7 @@ async def last_report(days=7):
     speedtest_info_last = await db.main.get_speedtest_info_last(days)
 
     # Get date
-    if speedtest_info_last:
+    if speedtest_info_last and any(speedtest_info_last):
         min_date = (speedtest_info_last[1].split()[0]).split('-')
         max_date = (speedtest_info_last[2].split()[0]).split('-')
         min_date = f'{min_date[2]}.{min_date[1]}'
@@ -37,8 +37,9 @@ async def week_report(week):
     """Отчёт по всем серверам за конкретную неделю"""
 
     speedtest_info_week = await db.main.get_speedtest_info_week(week)
+    logger.debug(speedtest_info_week)
 
-    if speedtest_info_week:
+    if speedtest_info_week and any(speedtest_info_week):
         # Get date
         min_date = (speedtest_info_week[1].split()[0]).split('-')
         max_date = (speedtest_info_week[2].split()[0]).split('-')
@@ -70,7 +71,7 @@ async def month_report(month):
     download_errors_month = await db.main.get_download_errors_month(month)
 
     # Вывод
-    if speedtest_info_month and download_info_month:
+    if speedtest_info_month and any(speedtest_info_month):
         await show_data(speedtest_info_month, speedtest_errors_month, download_info_month, download_errors_month)
     else:
         await bot.send_message(ADMINS[0], 'Нет данных')
