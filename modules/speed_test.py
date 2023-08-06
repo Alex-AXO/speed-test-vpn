@@ -43,8 +43,6 @@ def convert_speed_to_kilobytes(speed: str) -> float:
     except Exception as e:
         report = f'Error convert_speed_to_kilobytes(): {e}'
         logger.error(report)
-        # await bot.send_message(ADMINS[0], report)
-        # return 0
 
 
 @logger.catch

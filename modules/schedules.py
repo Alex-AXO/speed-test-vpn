@@ -8,7 +8,7 @@ import db
 
 @logger.catch
 async def speed_tests():
-    logger.debug(f'Start speed-tests...')
+    logger.debug('Start speed-tests...')
     logger.debug(f'Test-file: {FILE}')
     # await bot.send_message(ADMINS[0], 'Start speed_tests...\nTakes ~15 min.')
 
@@ -26,12 +26,12 @@ async def speed_tests():
         # if MODE == 2:
         #     break   # Остановка после проверки первого ключа для тестирования
 
-    logger.debug(f'End')
+    logger.debug('End')
 
 
 @logger.catch
 async def is_new_data():
-    logger.debug(f'is_new_data test')
+    logger.debug('is_new_data test')
 
     table = 'speed_tests'
     if not await db.main.check_new_rows(table):

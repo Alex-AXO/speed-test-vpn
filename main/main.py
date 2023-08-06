@@ -9,26 +9,28 @@ from initbot import scheduler, bot, dp
 
 @logger.catch
 async def setup_scheduler(_):
+    timezone = "Europe/Moscow"
+
     # scheduler.add_job(modules.schedules.speed_tests, "interval", seconds=15)
     scheduler.add_job(modules.schedules.speed_tests, "cron", hour=0+HOURS, minute=11,
-                      timezone="Europe/Moscow")  # Свободные слоты для ключей
+                      timezone=timezone)  # Свободные слоты для ключей
     scheduler.add_job(modules.schedules.speed_tests, "cron", hour=5+HOURS, minute=11,
-                      timezone="Europe/Moscow")  # Свободные слоты для ключей
+                      timezone=timezone)  # Свободные слоты для ключей
     scheduler.add_job(modules.schedules.speed_tests, "cron", hour=10+HOURS, minute=11,
-                      timezone="Europe/Moscow")  # Свободные слоты для ключей
+                      timezone=timezone)  # Свободные слоты для ключей
     scheduler.add_job(modules.schedules.speed_tests, "cron", hour=15+HOURS, minute=11,
-                      timezone="Europe/Moscow")  # Свободные слоты для ключей
+                      timezone=timezone)  # Свободные слоты для ключей
     scheduler.add_job(modules.schedules.speed_tests, "cron", hour=20+HOURS, minute=11,
-                      timezone="Europe/Moscow")  # Свободные слоты для ключей
+                      timezone=timezone)  # Свободные слоты для ключей
     scheduler.add_job(modules.schedules.is_new_data, "cron", hour=23, minute=22,
-                      timezone="Europe/Moscow")
+                      timezone=timezone)
     scheduler.start()
 
 
 @logger.catch
 async def on_startup(_):
     await bot.send_message(ADMINS[0], "Speed-Test.VPN.AXO is running!", reply_markup=handlers.keyboard.main)
-    logger.success(f"Start speed-test")
+    logger.success("Start speed-test")
     await setup_scheduler(dp)
 
 

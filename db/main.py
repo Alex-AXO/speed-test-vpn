@@ -37,8 +37,8 @@ async def get_server_name(key_id):
 async def add_download_info(key_id, download_speed, time, error=0):
     """Добавление информации о скорости скачивания файла и времени"""
     async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute(f"INSERT INTO download_files (key_id, download_speed, time, error) "
-                              f"VALUES (?, ?, ?, ?);",
+        async with db.execute("INSERT INTO download_files (key_id, download_speed, time, error) "
+                              "VALUES (?, ?, ?, ?);",
                               (key_id, download_speed, time, error)) as cursor:
             await db.commit()
             result = cursor.lastrowid
@@ -49,8 +49,8 @@ async def add_download_info(key_id, download_speed, time, error=0):
 async def add_new_key(server_name, key):
     """Добавление ключа (сервера)"""
     async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute(f"INSERT INTO server_keys (server_name, key) "
-                              f"VALUES (?, ?);",
+        async with db.execute("INSERT INTO server_keys (server_name, key) "
+                              "VALUES (?, ?);",
                               (server_name, key)) as cursor:
             await db.commit()
             result = cursor.lastrowid
@@ -61,8 +61,8 @@ async def add_new_key(server_name, key):
 async def add_speedtest_info(key_id, ping, download_speed, upload_speed, error=0):
     """Добавление информации о speedtest-cli"""
     async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute(f"INSERT INTO speed_tests (key_id, ping, download_speed, upload_speed, error) "
-                              f"VALUES (?, ?, ?, ?, ?);",
+        async with db.execute("INSERT INTO speed_tests (key_id, ping, download_speed, upload_speed, error) "
+                              "VALUES (?, ?, ?, ?, ?);",
                               (key_id, ping, download_speed, upload_speed, error)) as cursor:
             await db.commit()
             result = cursor.lastrowid
