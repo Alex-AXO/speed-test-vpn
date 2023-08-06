@@ -37,7 +37,6 @@ async def week_report(week):
     """Отчёт по всем серверам за конкретную неделю"""
 
     speedtest_info_week = await db.main.get_speedtest_info_week(week)
-    logger.debug(speedtest_info_week)
 
     if speedtest_info_week and any(speedtest_info_week):
         # Get date
