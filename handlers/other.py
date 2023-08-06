@@ -40,6 +40,7 @@ async def last1(message):
         days = message.text.split()[1]
     except Exception as e:
         days = 7
+
     await reports.last_report(days)
 
 
@@ -74,13 +75,13 @@ async def month_func(message):
 @logger.catch
 @dp.message_handler(commands="help", is_admin=True)
 async def help_command(message):
-    report = f'''
+    report = '''
 Проверка в: 00:11, 05:11, 10:11, 15:11, 20:11 (msk, +15 min.).
 
 /add – добавить ключ-сервера
 /test – принудительное тестирование
 /last 14 – отчёт за последн. 14 дней
-/week 21 – отчёт за 21 неделю
+/week 24 – отчёт за 21 неделю
 /month 3 – отчёт за 3 месяц
 
 Примеры:

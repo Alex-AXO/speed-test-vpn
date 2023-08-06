@@ -12,20 +12,24 @@ async def last_report(days=7):
     logger.debug(f'last report | {days=}')
 
     speedtest_info_last = await db.main.get_speedtest_info_last(days)
+
     # Get date
-    min_date = (speedtest_info_last[1].split()[0]).split('-')
-    max_date = (speedtest_info_last[2].split()[0]).split('-')
-    min_date = f'{min_date[2]}.{min_date[1]}'
-    max_date = f'{max_date[2]}.{max_date[1]}.{max_date[0]}'
-    await bot.send_message(ADMINS[0], f'{days=} | {min_date}–{max_date}', reply_markup=handlers.keyboard.main)
+    if speedtest_info_last:
+        min_date = (speedtest_info_last[1].split()[0]).split('-')
+        max_date = (speedtest_info_last[2].split()[0]).split('-')
+        min_date = f'{min_date[2]}.{min_date[1]}'
+        max_date = f'{max_date[2]}.{max_date[1]}.{max_date[0]}'
+        await bot.send_message(ADMINS[0], f'{days=} | {min_date}–{max_date}', reply_markup=handlers.keyboard.main)
 
-    speedtest_errors_last = await db.main.get_speedtest_errors_last(days)
+        speedtest_errors_last = await db.main.get_speedtest_errors_last(days)
 
-    download_info_last = await db.main.get_download_info_last(days)
-    download_errors_last = await db.main.get_download_errors_last(days)
+        download_info_last = await db.main.get_download_info_last(days)
+        download_errors_last = await db.main.get_download_errors_last(days)
 
-    # Вывод
-    await show_data(speedtest_info_last[0], speedtest_errors_last, download_info_last, download_errors_last)
+        # Вывод
+        await show_data(speedtest_info_last[0], speedtest_errors_last, download_info_last, download_errors_last)
+    else:
+        await bot.send_message(ADMINS[0], 'Нет данных')
 
 
 @logger.catch
@@ -34,20 +38,24 @@ async def week_report(week):
 
     speedtest_info_week = await db.main.get_speedtest_info_week(week)
 
-    # Get date
-    min_date = (speedtest_info_week[1].split()[0]).split('-')
-    max_date = (speedtest_info_week[2].split()[0]).split('-')
-    min_date = f'{min_date[2]}.{min_date[1]}'
-    max_date = f'{max_date[2]}.{max_date[1]}.{max_date[0]}'
-    await bot.send_message(ADMINS[0], f'{week=} | {min_date}–{max_date}')
+    if speedtest_info_week:
+        # Get date
+        min_date = (speedtest_info_week[1].split()[0]).split('-')
+        max_date = (speedtest_info_week[2].split()[0]).split('-')
+        min_date = f'{min_date[2]}.{min_date[1]}'
+        max_date = f'{max_date[2]}.{max_date[1]}.{max_date[0]}'
+        await bot.send_message(ADMINS[0], f'{week=} | {min_date}–{max_date}')
 
-    speedtest_errors_week = await db.main.get_speedtest_errors_week(week)
+        speedtest_errors_week = await db.main.get_speedtest_errors_week(week)
 
-    download_info_week = await db.main.get_download_info_week(week)
-    download_errors_week = await db.main.get_download_errors_week(week)
+        download_info_week = await db.main.get_download_info_week(week)
+        download_errors_week = await db.main.get_download_errors_week(week)
 
-    # Вывод
-    await show_data(speedtest_info_week[0], speedtest_errors_week, download_info_week, download_errors_week)
+        # Вывод
+        await show_data(speedtest_info_week[0], speedtest_errors_week, download_info_week, download_errors_week)
+
+    else:
+        await bot.send_message(ADMINS[0], 'Нет данных')
 
 
 @logger.catch
@@ -62,7 +70,10 @@ async def month_report(month):
     download_errors_month = await db.main.get_download_errors_month(month)
 
     # Вывод
-    await show_data(speedtest_info_month, speedtest_errors_month, download_info_month, download_errors_month)
+    if speedtest_info_month and download_info_month:
+        await show_data(speedtest_info_month, speedtest_errors_month, download_info_month, download_errors_month)
+    else:
+        await bot.send_message(ADMINS[0], 'Нет данных')
 
 
 @logger.catch
