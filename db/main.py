@@ -74,7 +74,7 @@ async def add_speedtest_info(key_id, ping, download_speed, upload_speed, error=0
 
 @logger.catch
 async def get_download_info_last(days):
-    """Получение информации (статистики) за неделю по скачиванию файла по серверам за неделю"""
+    """Получение информации (статистики) за несколько дней по скачиванию файла по серверам."""
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
         SELECT 
@@ -137,7 +137,7 @@ async def get_speedtest_info_last(days):
 
 @logger.catch
 async def get_speedtest_errors_last(days):
-    """Получение кол-ва ошибок за неделю (по скачиванию файла) по серверам за неделю"""
+    """Получение кол-ва ошибок за определённое кол-во дней (по скачиванию файла) по серверам."""
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
         SELECT 

@@ -31,6 +31,7 @@ async def add_new_key(message: types.Message):
 async def test_start(message):
     await message.answer('Start speed_test...')
     await speed_tests()
+    await message.answer('Test finished.')
 
 
 @logger.catch
@@ -38,7 +39,7 @@ async def test_start(message):
 async def last1(message):
     try:
         days = message.text.split()[1]
-    except Exception as e:
+    except Exception:
         days = 7
 
     await reports.last_report(days)
@@ -49,7 +50,7 @@ async def last1(message):
 async def week_func(message):
     try:
         week = message.text.split()[1]
-    except Exception as e:
+    except Exception:
         week = date.today().isocalendar()[1]
 
     logger.debug(f'week-command | {week=}')
@@ -61,7 +62,7 @@ async def week_func(message):
 async def month_func(message):
     try:
         month = message.text.split()[1]
-    except Exception as e:
+    except Exception:
         month = datetime.now().month
 
     await bot.send_message(ADMINS[0], f'{month=}')
@@ -81,7 +82,7 @@ async def help_command(message):
 /add – добавить ключ-сервера
 /test – принудительное тестирование
 /last 14 – отчёт за последн. 14 дней
-/week 24 – отчёт за 21 неделю
+/week 24 – отчёт за 24 неделю
 /month 3 – отчёт за 3 месяц
 
 Примеры:
