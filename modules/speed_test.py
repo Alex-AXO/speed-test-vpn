@@ -156,8 +156,14 @@ async def save_keys_number(server_name, key_id):
             logger.error(error_text)
             return
 
-        logger.debug(f"Add {count_keys=} to db")
-        await db.main.add_active_keys(key_id, count_keys)
+        if count_keys > 50000:
+            await db.main.add_active_keys(key_id, count_keys, 1)
+            report = f'{server_name}: save_keys_number: {count_keys=}'
+            logger.error(report)
+            # await bot.send_message(ADMINS[0], report)
+        else:
+            logger.debug(f"Add {count_keys=} to db")
+            await db.main.add_active_keys(key_id, count_keys)
 
     except Exception as e:
         await db.main.add_active_keys(key_id, 0, 1)

@@ -12,16 +12,7 @@ def db_func():
     cursor = conn.cursor()
 
     # Выполнение запроса
-    cursor.execute("""
-CREATE TABLE active_keys (
-    id             INTEGER  PRIMARY KEY AUTOINCREMENT
-                            NOT NULL,
-    date_time      DATETIME DEFAULT (DATETIME('now') ),
-    key_id                  REFERENCES server_keys (key_id),
-    active_keys           INTEGER,
-    error          INTEGER
-);
-    """)
+    cursor.execute("UPDATE active_keys SET error = 1 WHERE active_keys > 50000;")
 
     conn.commit()
 
@@ -106,4 +97,4 @@ def main():
 if __name__ == '__main__':
     main()
     db_func()
-    db_update()
+    # db_update()
