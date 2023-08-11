@@ -11,7 +11,7 @@ import asyncio
 
 import db.main
 from initbot import bot
-from config import FILE, PORT, ADMINS, MODE
+from config import FILE, PORT, ADMINS, MODE, JSON_FILE
 
 
 @logger.catch
@@ -79,14 +79,20 @@ async def speed_test_cli(key_id, server_name, localhost=0):
                  f'{upload_speed=} Mbit/s'
         logger.debug(report)
         # await bot.send_message(ADMINS[0], report)
-        await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)
+
+        if download_speed < 1 or upload_speed < 1:
+            await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
+            report = f'{server_name}: error speedtest-cli (speed too slow): {output}'
+            logger.error(report)
+            await bot.send_message(ADMINS[0], report)
+        else:
+            await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)
 
     except Exception as e:
         await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
         report = f'{server_name}: error proxychains speedtest-cli: {e}'
         logger.error(report)
         await bot.send_message(ADMINS[0], report)
-        return
 
 
 @logger.catch
@@ -135,7 +141,29 @@ async def download_file(key_id, server_name, localhost=0):
         report = f'{server_name}: error curl-download: {e}'
         logger.error(report)
         await bot.send_message(ADMINS[0], report)
-        return
+
+
+@logger.catch
+async def save_keys_number(server_name, key_id):
+    """Сохраняем количество ключей в БД"""
+
+    try:
+        count_keys = await db.main.get_server_active_keys(server_name)
+
+        if not count_keys:
+            error_text = f"save_keys_number(): server not found: {server_name}"
+            await bot.send_message(ADMINS[0], error_text)
+            logger.error(error_text)
+            return
+
+        logger.debug(f"Add {count_keys=} to db")
+        await db.main.add_active_keys(key_id, count_keys)
+
+    except Exception as e:
+        await db.main.add_active_keys(key_id, 0, 1)
+        report = f'{server_name}: error save_keys_number: {e}'
+        logger.error(report)
+        await bot.send_message(ADMINS[0], report)
 
 
 @logger.catch
@@ -168,13 +196,13 @@ async def speed_test_key(key, key_id, server_name):
 
         config_str = json.dumps(config)     # Конвертируем в строку
 
-        with open('config.json', 'w') as f:
+        with open(JSON_FILE, 'w') as f:
             f.write(config_str)     # Запишем конфигурацию в файл
 
         await asyncio.sleep(1)
         try:    # Попытка подключения к серверу VPN
             # Запускаем ss-local, указывая путь к временному файлу
-            ss_local = subprocess.Popen(['ss-local', '-v', '-c', 'config.json'])
+            ss_local = subprocess.Popen(['ss-local', '-v', '-c', JSON_FILE])
             logger.debug(f'{ss_local=}')
 
             await asyncio.sleep(4)
@@ -185,12 +213,15 @@ async def speed_test_key(key, key_id, server_name):
 
             await speed_test_cli(key_id, server_name)  # Функция измерения скорости через speedtest-cli
 
+            await save_keys_number(server_name, key_id)     # Функция записи количества ключей на сервере
+
         except KeyboardInterrupt:
             # Когда нажимается Ctrl + C, мы попадаем сюда
             print("Interrupted by user, shutting down.")
 
         except Exception as e:
-            report = f"{server_name}: it is impossible to connect to the server, download the file and receive data. Error: {e}"
+            report = f"{server_name}: it is impossible to connect to the server, download the file and receive data. " \
+                     f"Error: {e}"
             logger.error(report)
             await bot.send_message(ADMINS[0], report)
 
@@ -201,7 +232,7 @@ async def speed_test_key(key, key_id, server_name):
 
             try:
                 # В конце удаляем временный файл
-                os.remove('config.json')
+                os.remove(JSON_FILE)
                 os.remove(FILE)
 
             except Exception as e:
@@ -211,7 +242,7 @@ async def speed_test_key(key, key_id, server_name):
         try:
             await asyncio.sleep(1)
 
-            await download_file(key_id, server_name, localhost=1)   # Функция скачивания файла (для замера скорости и времени)
+            await download_file(key_id, server_name, localhost=1)   # Функция скачивания файла (замер: скорости/времени)
 
             await asyncio.sleep(1)
 
@@ -221,11 +252,8 @@ async def speed_test_key(key, key_id, server_name):
             # Когда нажимается Ctrl + C, мы попадаем сюда
             print("Interrupted by user, shutting down.")
 
-
         except Exception as e:
-            report = f"{server_name}: it is impossible to connect to the server, download the file and receive data. Error: {e}"
+            report = f"{server_name}: it is impossible to connect to the server, download the file and receive data. " \
+                     f"Error: {e}"
             logger.error(report)
             await bot.send_message(ADMINS[0], report)
-
-        finally:
-            pass

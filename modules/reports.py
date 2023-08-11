@@ -8,7 +8,7 @@ from config import ADMINS
 
 @logger.catch
 async def last_report(days=7):
-    """Отчёт по всем серверам за неделю / curl - download file"""
+    """Отчёт по всем серверам за несколько дней"""
     logger.debug(f'last report | {days=}')
 
     speedtest_info_last = await db.main.get_speedtest_info_last(days)
@@ -26,8 +26,11 @@ async def last_report(days=7):
         download_info_last = await db.main.get_download_info_last(days)
         download_errors_last = await db.main.get_download_errors_last(days)
 
+        servers_active_keys = await db.main.get_servers_active_keys(days)
+
         # Вывод
-        await show_data(speedtest_info_last[0], speedtest_errors_last, download_info_last, download_errors_last)
+        await show_data(speedtest_info_last[0], speedtest_errors_last, download_info_last, download_errors_last,
+                        servers_active_keys)
     else:
         await bot.send_message(ADMINS[0], 'Нет данных')
 
@@ -51,8 +54,11 @@ async def week_report(week):
         download_info_week = await db.main.get_download_info_week(week)
         download_errors_week = await db.main.get_download_errors_week(week)
 
+        servers_active_keys = await db.main.get_servers_active_keys_week(week)
+
         # Вывод
-        await show_data(speedtest_info_week[0], speedtest_errors_week, download_info_week, download_errors_week)
+        await show_data(speedtest_info_week[0], speedtest_errors_week, download_info_week, download_errors_week,
+                        servers_active_keys)
 
     else:
         await bot.send_message(ADMINS[0], 'Нет данных')
@@ -69,15 +75,18 @@ async def month_report(month):
     download_info_month = await db.main.get_download_info_month(month)
     download_errors_month = await db.main.get_download_errors_month(month)
 
+    servers_active_keys = await db.main.get_servers_active_keys_month(month)
+
     # Вывод
     if speedtest_info_month and any(speedtest_info_month):
-        await show_data(speedtest_info_month, speedtest_errors_month, download_info_month, download_errors_month)
+        await show_data(speedtest_info_month, speedtest_errors_month, download_info_month, download_errors_month,
+                        servers_active_keys)
     else:
         await bot.send_message(ADMINS[0], 'Нет данных')
 
 
 @logger.catch
-async def show_data(speedtest_info, speedtest_errors, download_info, download_errors):
+async def show_data(speedtest_info, speedtest_errors, download_info, download_errors, active_keys=None):
     """Вывод информации (статистики о серверах)"""
 
     # Преобразовать списки кортежей в словари для лёгкого доступа
@@ -114,6 +123,10 @@ async def show_data(speedtest_info, speedtest_errors, download_info, download_er
             "error_count_download": error_count_download
         }
 
+    if active_keys:
+        keys_dict = dict(active_keys)
+
+    # Вывод информации
     for key_id, data in combined_data.items():
         avg_ping = round(data['avg_ping'])
         avg_download = round(data['avg_download'])
@@ -124,12 +137,20 @@ async def show_data(speedtest_info, speedtest_errors, download_info, download_er
 
         server_name = (await db.main.get_server_name(key_id))[0]
 
-        log_text = f'''{key_id=} | {server_name}
-| {avg_ping=} ms | {avg_download=} Mb/s | {avg_upload=} Mb/s | errors: {data['error_count_speedtest']}
-| download speed: {avg_speed_download} MB/s | time: {avg_time_download} sec. | errors: {data['error_count_download']}'''
+        active_key_text = ''
+        if active_keys:
+            active_key = keys_dict.get(key_id)
+            try:
+                active_key_text = f"| {int(active_key)}"
+            except TypeError:
+                active_key_text = ''
+
+        log_text = f'''{key_id=} | {server_name} {active_key_text}
+| {avg_ping=} ms | {avg_download=} Mb/s | {avg_upload=} Mb/s | errs: {data['error_count_speedtest']}
+| download speed: {avg_speed_download} MB/s | time: {avg_time_download} sec. | errs: {data['error_count_download']}'''
         logger.debug(log_text)
 
-        report = f'''<b>{server_name}</b>  |  errors: {data['error_count_speedtest']}
+        report = f'''<b>{server_name}</b> {active_key_text} | errs: {data['error_count_speedtest']}
 {avg_ping} ms  |  <b>{avg_download}</b> MB/s  |  <b>{avg_upload}</b> Mb/s
 <i>[ {avg_speed_download} MB/s  |  {avg_time_download} sec. |  errs: {data['error_count_download']} ]</i>'''
         await bot.send_message(ADMINS[0], report)

@@ -4,7 +4,10 @@ from datetime import datetime, timedelta
 import aiosqlite
 
 from initbot import logger
-from config import DB_PATH, NEW_ROWS_IN_DAY
+from config import DB_PATH, NEW_ROWS_IN_DAY, DB_VPN1, DB_VPN1r
+
+
+# - - - Ключи, сервера - - -
 
 
 @logger.catch
@@ -30,7 +33,7 @@ async def get_server_name(key_id):
             return result if result else None
 
 
-# - - -
+# - - - Добавление информации в БД - - -
 
 
 @logger.catch
@@ -69,12 +72,24 @@ async def add_speedtest_info(key_id, ping, download_speed, upload_speed, error=0
             return result
 
 
-# - - -
+@logger.catch
+async def add_active_keys(key_id, active_keys, error=0):
+    """Добавление информации о кол-ве активных ключей (сервера)"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("INSERT INTO active_keys (key_id, active_keys, error) "
+                              "VALUES (?, ?, ?);",
+                              (key_id, active_keys, error)) as cursor:
+            await db.commit()
+            result = cursor.lastrowid
+            return result
+
+
+# - - - Получение статистики и ошибок (по дням) - - -
 
 
 @logger.catch
 async def get_download_info_last(days):
-    """Получение информации (статистики) за несколько дней по скачиванию файла по серверам."""
+    """Получение информации (статистики) за несколько дней по скачиванию файла (по серверам)"""
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
         SELECT 
@@ -108,7 +123,7 @@ async def get_download_errors_last(days):
 
 @logger.catch
 async def get_speedtest_info_last(days):
-    """Получение информации (статистики) за неделю по скачиванию файла по серверам за неделю"""
+    """Получение информации (статистики) за несколько дней по скорости сервера"""
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
         SELECT
@@ -151,7 +166,24 @@ async def get_speedtest_errors_last(days):
             return result if result else []
 
 
-# - - -
+@logger.catch
+async def get_servers_active_keys(days):
+    """Получение информации (статистики) за несколько дней по кол-ву ключей"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+        SELECT 
+            key_id, 
+            AVG(active_keys) as avg_keys
+        FROM active_keys 
+        WHERE 
+            date_time >= datetime('now', ?) AND 
+            error = 0
+        GROUP BY key_id;""", (f'-{days} days',)) as result:
+            result = await result.fetchall()
+            return result if result else []
+
+
+# - - - Получение статистики и ошибок (по неделям) - - -
 
 
 @logger.catch
@@ -243,7 +275,26 @@ async def get_download_errors_week(week):
             return result if result else []
 
 
-# - - -
+@logger.catch
+async def get_servers_active_keys_week(week):
+    """Получение информации (статистики) за неделю по кол-ву ключей"""
+    year = date.today().year
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+        SELECT 
+            key_id, 
+            AVG(active_keys) as avg_keys
+        FROM active_keys 
+        WHERE 
+            strftime('%Y', date_time) = ? AND
+            strftime('%W', date_time) = ? AND 
+            error = 0
+        GROUP BY key_id;""", (str(year), str(week).zfill(2))) as result:
+            result = await result.fetchall()
+            return result if result else []
+
+
+# - - - Получение статистики и ошибок (по месяцам) - - -
 
 
 @logger.catch
@@ -324,6 +375,28 @@ async def get_download_errors_month(month):
 
 
 @logger.catch
+async def get_servers_active_keys_month(month):
+    """Получение информации (статистики) за месяц по кол-ву ключей"""
+    year = date.today().year
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+        SELECT 
+            key_id, 
+            AVG(active_keys) as avg_keys
+        FROM active_keys 
+        WHERE 
+            strftime('%Y', date_time) = ? AND
+            strftime('%m', date_time) = ? AND 
+            error = 0
+        GROUP BY key_id;""", (str(year), str(month).zfill(2))) as result:
+            result = await result.fetchall()
+            return result if result else []
+
+
+# - - - Разное - - -
+
+
+@logger.catch
 async def check_new_rows(table):
     """Проверяет, были ли добавлены новые строки в таблицу"""
 
@@ -341,3 +414,21 @@ async def check_new_rows(table):
         return True
     else:
         return False
+
+
+@logger.catch
+async def get_server_active_keys(server_name: str):
+    """Получение кол-ва активных ключей на сервере"""
+
+    if server_name == "axo-outline-rus":
+        db_path = DB_VPN1r
+    else:
+        db_path = DB_VPN1
+
+    async with aiosqlite.connect(db_path) as db:
+        async with db.execute(
+                "SELECT active_users "
+                "FROM servers "
+                "WHERE name = ?", (server_name,)) as result:
+            result = await result.fetchall()
+            return result[0][0] if result else None

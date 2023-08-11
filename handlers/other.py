@@ -37,8 +37,10 @@ async def test_start(message):
 @logger.catch
 @dp.message_handler(commands="last", is_admin=True)
 async def last1(message):
+
     try:
         days = message.text.split()[1]
+
     except Exception:
         days = 7
 
