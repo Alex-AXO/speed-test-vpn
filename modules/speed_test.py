@@ -80,13 +80,13 @@ async def speed_test_cli(key_id, server_name, localhost=0):
         logger.debug(report)
         # await bot.send_message(ADMINS[0], report)
 
-        if download_speed < 1 or upload_speed < 1:
-            await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
-            report = f'{server_name}: error speedtest-cli (speed too slow): {output}'
+        if download_speed < 1 or upload_speed < 1 or ping > 300:    # Т.е. если какие-то странные значения, то не берём
+            await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)    # Сохраняем ошибку
+            report = f'{server_name}: error speedtest-cli (speed too slow or ping too high): {output}'
             logger.error(report)
             await bot.send_message(ADMINS[0], report)
         else:
-            await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)
+            await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)    # Данные сохраняем в БД
 
     except Exception as e:
         await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)

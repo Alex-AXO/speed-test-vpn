@@ -12,7 +12,7 @@ def db_func():
     cursor = conn.cursor()
 
     # Выполнение запроса
-    cursor.execute("UPDATE active_keys SET error = 1 WHERE active_keys > 50000;")
+    cursor.execute("UPDATE speed_tests SET error = 1 WHERE ping > 300;")
 
     conn.commit()
 
