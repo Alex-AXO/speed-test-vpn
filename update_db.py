@@ -12,7 +12,11 @@ def db_func():
     cursor = conn.cursor()
 
     # Выполнение запроса
-    cursor.execute("UPDATE speed_tests SET error = 1 WHERE ping > 300;")
+    cursor.execute('UPDATE server_keys SET server_name = "axo-outline-08" WHERE server_name = "axo-outline-08ae";')
+    cursor.execute('UPDATE server_keys SET server_name = "axo-outline-09" WHERE server_name = "axo-outline-09pq";')
+    cursor.execute('UPDATE server_keys SET server_name = "axo-outline-10" WHERE server_name = "axo-outline-10ae";')
+    cursor.execute('UPDATE server_keys SET server_name = "axo-outline-11" WHERE server_name = "axo-outline-11ae";')
+    cursor.execute('UPDATE server_keys SET server_name = "axo-outline-12" WHERE server_name = "axo-outline-12pq";')
 
     conn.commit()
 
