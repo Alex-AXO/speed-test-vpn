@@ -13,4 +13,3 @@ dump*
 *.json
 test*.zip
 *.db
-*.toml
