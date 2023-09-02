@@ -47,6 +47,39 @@ sudo ufw reload
 
 * [ ]  Создать таблицу: python update_db.py
 
+Далее нужно проверить, что всё работает.
+
+И теперь запускать ПО как сервис:
+
+sudo nano /etc/systemd/system/speed-test-vpn.service
+
+[Unit]
+Description=Speed Test VPN Service
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/root/speed-test-vpn
+ExecStart=/usr/bin/poetry run speed-test
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+
+sudo systemctl daemon-reload
+
+sudo systemctl start speed-test-vpn.service
+
+sudo systemctl status speed-test-vpn.service
+
+sudo systemctl enable speed-test-vpn.service
+
+sudo systemctl stop speed-test-vpn.service
+
+sudo systemctl restart speed-test-vpn.service
+
+
 
 ## Алгоритм
 

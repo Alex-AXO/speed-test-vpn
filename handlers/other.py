@@ -8,7 +8,7 @@ from modules import reports
 from modules.schedules import speed_tests
 from initbot import dp, bot
 
-from config import ADMINS
+from config import ADMINS, HOURS
 
 
 @logger.catch
@@ -78,8 +78,8 @@ async def month_func(message):
 @logger.catch
 @dp.message_handler(commands="help", is_admin=True)
 async def help_command(message):
-    report = '''
-Проверка в: 00:11, 05:11, 10:11, 15:11, 20:11 (msk, +15 min.).
+    report = f'''
+Проверка в: {HOURS}:11, {5 + HOURS}:11, {10 + HOURS}:11, {15 + HOURS}:11, {20 + HOURS}:11 (msk, +15 min.).
 
 /add – добавить ключ-сервера
 /test – принудительное тестирование
