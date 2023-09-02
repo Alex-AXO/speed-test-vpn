@@ -67,6 +67,9 @@ CREATE TABLE IF NOT EXISTS server_keys (
             note        TEXT
 );""")
 
+        # Добавление строки с server_name = "localhost"
+        cursor.execute("""INSERT INTO server_keys (server_name) VALUES ('localhost');""")
+
         cursor.execute("""
 CREATE TABLE IF NOT EXISTS speed_tests (
     id             INTEGER  PRIMARY KEY AUTOINCREMENT
