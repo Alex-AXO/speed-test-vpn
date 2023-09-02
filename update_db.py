@@ -26,7 +26,7 @@ def db_func():
     conn.close()
 
 
-def db_update():
+def db_create():
 
     print('Start db_update()')
 
@@ -35,35 +35,52 @@ def db_update():
 
     try:
         # Отключаем foreign keys для упрощения операций с таблицами
-        cursor.execute("PRAGMA foreign_keys = 0;")
-
-        # Создаём временную таблицу для сохранения данных
-        cursor.execute("CREATE TABLE sqlitestudio_temp_table AS SELECT * FROM server_keys;")
-
-        # Удаляем старую таблицу
-        cursor.execute("DROP TABLE server_keys;")
+        cursor.execute("PRAGMA foreign_keys = off;")
 
         # Создаём новую структуру для таблицы server_keys
         cursor.execute("""
-        CREATE TABLE server_keys (
+CREATE TABLE IF NOT EXISTS active_keys (
+    id             INTEGER  PRIMARY KEY AUTOINCREMENT
+                            NOT NULL,
+    date_time      DATETIME DEFAULT (DATETIME('now') ),
+    key_id                  REFERENCES server_keys (key_id),
+    active_keys           INTEGER,
+    error          INTEGER
+);""")
+
+        cursor.execute("""
+CREATE TABLE IF NOT EXISTS download_files (
+    id             INTEGER  PRIMARY KEY AUTOINCREMENT
+                            NOT NULL,
+    date_time      DATETIME DEFAULT (DATETIME('now') ),
+    key_id                  REFERENCES server_keys (key_id), 
+    download_speed REAL,
+    time           INTEGER,
+    error          INTEGER
+);""")
+
+        cursor.execute("""
+CREATE TABLE IF NOT EXISTS server_keys (
             key_id      INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             server_name TEXT,
             key         TEXT,
             note        TEXT
-        );
-        """)
+);""")
 
-        # Переносим данные из временной таблицы в новую структуру
         cursor.execute("""
-        INSERT INTO server_keys (key_id, server_name, key)
-        SELECT key_id, server_name, key FROM sqlitestudio_temp_table;
-        """)
-
-        # Удаляем временную таблицу
-        cursor.execute("DROP TABLE sqlitestudio_temp_table;")
+CREATE TABLE IF NOT EXISTS speed_tests (
+    id             INTEGER  PRIMARY KEY AUTOINCREMENT
+                            NOT NULL,
+    date_time      DATETIME DEFAULT (DATETIME('now') ),
+    key_id         INTEGER  REFERENCES server_keys (key_id),
+    ping           REAL,
+    download_speed REAL,
+    upload_speed   REAL,
+    error          INTEGER
+);""")
 
         # Включаем обратно foreign keys
-        cursor.execute("PRAGMA foreign_keys = 1;")
+        cursor.execute("PRAGMA foreign_keys = on;")
 
         # Подтверждаем изменения (если вы используете транзакции)
         conn.commit()
@@ -80,25 +97,26 @@ def db_update():
 
 
 def main():
+    print('Start main()')
     # Подключение к базе данных
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+    # conn = sqlite3.connect(DB_PATH)
+    # cursor = conn.cursor()
 
     # Выполнение запроса на получение всех строк из таблицы server_keys
-    cursor.execute('SELECT key_id, server_name, key FROM server_keys')
-    rows = cursor.fetchall()
+    # cursor.execute('SELECT key_id, server_name, key FROM server_keys')
+    # rows = cursor.fetchall()
 
     # Вывод всех строк
-    print('key_id | server_name | key')
-    print('-------------------------')
-    for row in rows:
-        print(row[0], '|', row[1], '|', row[2])
+    # print('key_id | server_name | key')
+    # print('-------------------------')
+    # for row in rows:
+    #     print(row[0], '|', row[1], '|', row[2])
 
     # Закрытие соединения с базой данных
-    conn.close()
+    # conn.close()
 
 
 if __name__ == '__main__':
     main()
-    db_func()
-    # db_update()
+    # db_func()
+    db_create()

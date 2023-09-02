@@ -4,20 +4,49 @@
 
 ## Установка на сервер
 
+Клонировать проект на сервер.
+
+* [ ]  apt install python3-poetry
+
+Внутри:
+
+* [ ]  poetry update
+
 ```
 # УСТАНОВКА
 # pip install speedtest-cli
 
 # Из-под root:
 # sudo apt update
-# sudo apt install shadowsocks-libev
-# sudo apt install curl
 
-# sudo apt install proxychains
+sudo apt install shadowsocks-libev
+sudo apt install curl
+sudo apt install proxychains
+
 # для proxychains нужен config:
+sudo nano /etc/proxychains.conf
+
 # вместо: socks4  127.0.0.1 9050
 # пишем: socks5 127.0.0.1 2023
+
+sudo ufw allow 2023/tcp
+sudo ufw allow 2023/udp
+sudo ufw reload 
+
+
 ```
+
+Создание файлов:
+
+* [ ]  .env:
+  API_TOKEN="..."    # TG_bot
+  ADMIN1=...
+* [ ]  config.py:
+
+...
+
+* [ ]  Создать таблицу: python update_db.py
+
 
 ## Алгоритм
 
