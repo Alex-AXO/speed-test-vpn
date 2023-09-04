@@ -53,28 +53,32 @@ async def is_new_data():
 
 @logger.catch
 async def notify_unavailable_servers():
-    logger.debug('Start notify_unavailable_servers()')
+    # logger.debug('Start notify_unavailable_servers()')
 
     keys = await db.main.get_server_keys()
 
     for key in keys:
-        key_id = key[0]
+        # key_id = key[0]
         server_name = key[1]
-        key = key[2]
+        # key = key[2]
 
-        logger.debug(f'{server_name=}, {key_id=}')
+        # logger.debug(f'{server_name=}, {key_id=}')
 
         if key:
 
             url = await db.main.get_server_url(server_name)
-            logger.debug(f'{url=}')
+            # logger.debug(f'{url=}')
 
             server_status = await check_server_availability(url)
-            logger.debug(f'{server_status=}')
+            # logger.debug(f'{server_status=}')
 
             if not server_status:
-                await bot.send_message(ADMINS[0], f'Внимание! Сервер {server_name} не доступен!')
-                logger.error(f'Attention! Server {server_name} is not available!')
+                await asyncio.sleep(8)  # ждём 5 секунд перед повторной проверкой
+                second_check_results = await check_server_availability(url)
+
+                if not second_check_results:
+                    await bot.send_message(ADMINS[0], f'Внимание! Сервер {server_name} не доступен!')
+                    logger.error(f'Attention! Server {server_name} is not available!')
 
         await asyncio.sleep(2)
 

@@ -13,7 +13,7 @@ async def setup_scheduler(_):
 
     if MODE == 1:
         # Проверяем сервера на доступность
-        scheduler.add_job(modules.schedules.notify_unavailable_servers, "interval", minutes=1)
+        scheduler.add_job(modules.schedules.notify_unavailable_servers, "interval", minutes=8)
 
     scheduler.add_job(modules.schedules.speed_tests, "cron", hour=0+HOURS, minute=11,
                       timezone=timezone)  # Свободные слоты для ключей
