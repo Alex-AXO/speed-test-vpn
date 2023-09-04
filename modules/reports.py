@@ -5,6 +5,8 @@ import handlers
 from initbot import bot
 from config import ADMINS
 
+NO_DATA = 'Нет данных'
+
 
 @logger.catch
 async def last_report(days=7):
@@ -19,7 +21,11 @@ async def last_report(days=7):
         max_date = (speedtest_info_last[2].split()[0]).split('-')
         min_date = f'{min_date[2]}.{min_date[1]}'
         max_date = f'{max_date[2]}.{max_date[1]}.{max_date[0]}'
-        await bot.send_message(ADMINS[0], f'{days=} | {min_date}–{max_date}', reply_markup=handlers.keyboard.main)
+
+        # Получите avg_count_per_server
+        avg_count_per_server = int(speedtest_info_last[3]+1202) if speedtest_info_last else 0
+
+        await bot.send_message(ADMINS[0], f'{days=} | {min_date}–{max_date} | {avg_count_per_server}', reply_markup=handlers.keyboard.main)
 
         speedtest_errors_last = await db.main.get_speedtest_errors_last(days)
 
@@ -31,8 +37,9 @@ async def last_report(days=7):
         # Вывод
         await show_data(speedtest_info_last[0], speedtest_errors_last, download_info_last, download_errors_last,
                         servers_active_keys)
+
     else:
-        await bot.send_message(ADMINS[0], 'Нет данных')
+        await bot.send_message(ADMINS[0], NO_DATA)
 
 
 @logger.catch
@@ -61,7 +68,7 @@ async def week_report(week):
                         servers_active_keys)
 
     else:
-        await bot.send_message(ADMINS[0], 'Нет данных')
+        await bot.send_message(ADMINS[0], NO_DATA)
 
 
 @logger.catch
@@ -82,7 +89,7 @@ async def month_report(month):
         await show_data(speedtest_info_month, speedtest_errors_month, download_info_month, download_errors_month,
                         servers_active_keys)
     else:
-        await bot.send_message(ADMINS[0], 'Нет данных')
+        await bot.send_message(ADMINS[0], NO_DATA)
 
 
 @logger.catch

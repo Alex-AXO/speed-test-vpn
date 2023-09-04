@@ -12,11 +12,9 @@ def db_func():
     cursor = conn.cursor()
 
     # Выполнение запроса
-    cursor.execute('UPDATE server_keys SET server_name = "axo-outline-08" WHERE server_name = "axo-outline-08ae";')
-    cursor.execute('UPDATE server_keys SET server_name = "axo-outline-09" WHERE server_name = "axo-outline-09pq";')
-    cursor.execute('UPDATE server_keys SET server_name = "axo-outline-10" WHERE server_name = "axo-outline-10ae";')
-    cursor.execute('UPDATE server_keys SET server_name = "axo-outline-11" WHERE server_name = "axo-outline-11ae";')
-    cursor.execute('UPDATE server_keys SET server_name = "axo-outline-12" WHERE server_name = "axo-outline-12pq";')
+
+    # cursor.execute("""INSERT INTO server_keys (server_name, key) VALUES ('localhost');""")
+    # cursor.execute('UPDATE server_keys SET server_name = "axo-outline-12" WHERE server_name = "axo-outline-12pq";')
 
     conn.commit()
 
@@ -121,5 +119,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # db_create()
     # db_func()
-    db_create()

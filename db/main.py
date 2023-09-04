@@ -147,7 +147,20 @@ async def get_speedtest_info_last(days):
             error = 0
         GROUP BY key_id;""", (f'-{days} days',)) as result:
             result = await result.fetchall()
-            return result, min_date, max_date if result else []
+
+        async with db.execute("""
+        SELECT 
+            COUNT(*) as total_count,
+            COUNT(DISTINCT key_id) as distinct_servers
+        FROM speed_tests 
+        WHERE 
+            date_time >= datetime('now', ?) AND 
+            error = 0;""", (f'-{days} days',)) as count_result:
+            total_count, distinct_servers = await count_result.fetchone()
+
+        avg_count_per_server = total_count / distinct_servers if distinct_servers else 0
+
+        return result, min_date, max_date, avg_count_per_server if result else []
 
 
 @logger.catch
