@@ -60,7 +60,7 @@ async def notify_unavailable_servers():
     for key in keys:
         # key_id = key[0]
         server_name = key[1]
-        # key = key[2]
+        key = key[2]
 
         # logger.debug(f'{server_name=}, {key_id=}')
 
