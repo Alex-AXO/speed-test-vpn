@@ -23,7 +23,7 @@ async def last_report(days=7):
         max_date = f'{max_date[2]}.{max_date[1]}.{max_date[0]}'
 
         # Получите avg_count_per_server
-        avg_count_per_server = int(speedtest_info_last[3]+1202) if speedtest_info_last else 0
+        avg_count_per_server = int(speedtest_info_last[3]) if speedtest_info_last else 0
 
         await bot.send_message(ADMINS[0], f'{days=} | {min_date}–{max_date} | {avg_count_per_server}', reply_markup=handlers.keyboard.main)
 
