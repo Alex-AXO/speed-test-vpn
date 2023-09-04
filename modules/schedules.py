@@ -1,7 +1,8 @@
 from loguru import logger
+import asyncio
 
-from modules.speed_test import speed_test_key, save_keys_number
-from config import FILE, ADMINS
+from modules.speed_test import speed_test_key, save_keys_number, check_server_availability
+from config import FILE, ADMINS, MODE
 from initbot import bot
 import db
 
@@ -9,8 +10,9 @@ import db
 @logger.catch
 async def speed_tests():
     logger.debug('Start speed-tests...')
-    logger.debug(f'Test-file: {FILE}')
-    # await bot.send_message(ADMINS[0], 'Start speed_tests...\nTakes ~15 min.')
+
+    if MODE != 3:
+        logger.debug(f'Test-file: {FILE}')
 
     keys = await db.main.get_server_keys()
     # print(keys)
@@ -41,8 +43,39 @@ async def is_new_data():
         logger.error(report)
         await bot.send_message(ADMINS[0], report)
 
-    table = 'download_files'
-    if not await db.main.check_new_rows(table):
-        report = f'No (or small) data was added (for day) to the table: {table}'
-        logger.error(report)
-        await bot.send_message(ADMINS[0], report)
+    if MODE != 3:
+        table = 'download_files'
+        if not await db.main.check_new_rows(table):
+            report = f'No (or small) data was added (for day) to the table: {table}'
+            logger.error(report)
+            await bot.send_message(ADMINS[0], report)
+
+
+@logger.catch
+async def notify_unavailable_servers():
+    logger.debug('Start notify_unavailable_servers()')
+
+    keys = await db.main.get_server_keys()
+
+    for key in keys:
+        key_id = key[0]
+        server_name = key[1]
+        key = key[2]
+
+        logger.debug(f'{server_name=}, {key_id=}')
+
+        if key:
+
+            url = db.main.get_server_url(server_name)
+            logger.debug(f'{url=}')
+
+            server_status = await check_server_availability(url)
+            logger.debug(f'{server_status=}')
+
+            if not server_status:
+                await bot.send_message(ADMINS[0], f'Внимание! Сервер {server_name} не доступен!')
+                logger.error(f'Attention! Server {server_name} is not available!')
+
+        await asyncio.sleep(2)
+
+    logger.debug('End')

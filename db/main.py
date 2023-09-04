@@ -418,12 +418,18 @@ async def check_new_rows(table):
 
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("SELECT COUNT(*) "
+                              "FROM  server_keys") as cursor:
+            new_rows = await cursor.fetchone()
+            count_server = new_rows[0]
+
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("SELECT COUNT(*) "
                               f"FROM {table} "
                               "WHERE date_time BETWEEN ? AND ?", (yesterday, today)) as cursor:
             new_rows = await cursor.fetchone()
             new_rows = new_rows[0]
 
-    if new_rows >= NEW_ROWS_IN_DAY:
+    if new_rows >= NEW_ROWS_IN_DAY * count_server:
         return True
     else:
         return False
@@ -441,6 +447,24 @@ async def get_server_active_keys(server_name: str):
     async with aiosqlite.connect(db_path) as db:
         async with db.execute(
                 "SELECT active_users "
+                "FROM servers "
+                "WHERE name = ?", (server_name,)) as result:
+            result = await result.fetchall()
+            return result[0][0] if result else None
+
+
+@logger.catch
+async def get_server_url(server_name: str) -> str:
+    """Получение URL API сервера для проверки"""
+
+    if server_name == "axo-outline-rus":
+        db_path = DB_VPN1r
+    else:
+        db_path = DB_VPN1
+
+    async with aiosqlite.connect(db_path) as db:
+        async with db.execute(
+                "SELECT api_url "
                 "FROM servers "
                 "WHERE name = ?", (server_name,)) as result:
             result = await result.fetchall()

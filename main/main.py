@@ -11,7 +11,10 @@ from initbot import scheduler, bot, dp
 async def setup_scheduler(_):
     timezone = "Europe/Moscow"
 
-    # scheduler.add_job(modules.schedules.speed_tests, "interval", seconds=15)
+    if MODE == 1:
+        # Проверяем сервера на доступность
+        scheduler.add_job(modules.schedules.notify_unavailable_servers, "interval", minutes=1)
+
     scheduler.add_job(modules.schedules.speed_tests, "cron", hour=0+HOURS, minute=11,
                       timezone=timezone)  # Свободные слоты для ключей
     scheduler.add_job(modules.schedules.speed_tests, "cron", hour=5+HOURS, minute=11,
@@ -22,8 +25,10 @@ async def setup_scheduler(_):
                       timezone=timezone)  # Свободные слоты для ключей
     scheduler.add_job(modules.schedules.speed_tests, "cron", hour=20+HOURS, minute=11,
                       timezone=timezone)  # Свободные слоты для ключей
+
+    # Проверяет, работает ли сервис (были ли добавлены данные замеров за этот день в БД)
     scheduler.add_job(modules.schedules.is_new_data, "cron", hour=23, minute=22,
-                      timezone=timezone)    # Проверяет, работает ли сервис (были ли добавлены данные за этот день в БД)
+                      timezone=timezone)
     scheduler.start()
 
 

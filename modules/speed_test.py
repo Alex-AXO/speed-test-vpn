@@ -8,6 +8,7 @@ import subprocess
 import re
 import os
 import asyncio
+import aiohttp
 
 import db.main
 from initbot import bot
@@ -266,3 +267,22 @@ async def speed_test_key(key, key_id, server_name):
                      f"Error: {e}"
             logger.error(report)
             await bot.send_message(ADMINS[0], report)
+
+
+async def check_server_availability(url: str, timeout: int = 5):
+    """
+    Проверяет доступность сервера по URL.
+    :param url: URL сервера.
+    :param timeout: Таймаут в секундах.
+    :return: True если сервер доступен, иначе False.
+    """
+
+    logger.debug(f'Checking server: URL: {url}')
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=timeout, ssl=False) as response:
+                return True
+    except Exception as e:
+        logger.error(f"Error check_server_availability(). Exception type: {type(e)}. Exception message: {e}.")
+        return False
