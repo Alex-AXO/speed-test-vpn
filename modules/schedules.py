@@ -66,7 +66,7 @@ async def notify_unavailable_servers():
 
         if key:
 
-            url = db.main.get_server_url(server_name)
+            url = await db.main.get_server_url(server_name)
             logger.debug(f'{url=}')
 
             server_status = await check_server_availability(url)
