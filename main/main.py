@@ -2,7 +2,7 @@ from loguru import logger
 from aiogram.utils import executor
 
 import handlers.keyboard
-from config import ADMINS, HOURS
+from config import ADMINS, HOURS, MODE
 import modules
 from initbot import scheduler, bot, dp
 
