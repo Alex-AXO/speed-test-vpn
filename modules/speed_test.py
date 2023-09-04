@@ -277,7 +277,7 @@ async def check_server_availability(url: str, timeout: int = 5):
     :return: True если сервер доступен, иначе False.
     """
 
-    logger.debug(f'Checking server: URL: {url}')
+    # logger.debug(f'Checking server: URL: {url}')
 
     try:
         async with aiohttp.ClientSession() as session:
