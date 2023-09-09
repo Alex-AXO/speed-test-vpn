@@ -53,6 +53,8 @@ async def is_new_data():
 
 @logger.catch
 async def notify_unavailable_servers():
+    """Проверяем сервера на доступность"""
+
     # logger.debug('Start notify_unavailable_servers()')
 
     keys = await db.main.get_server_keys()
@@ -82,4 +84,4 @@ async def notify_unavailable_servers():
 
         await asyncio.sleep(2)
 
-    logger.debug('End')
+    # logger.debug('End')
