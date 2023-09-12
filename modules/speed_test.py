@@ -81,10 +81,10 @@ async def speed_test_cli(key_id, server_name, localhost=0):
         logger.debug(report)
         # await bot.send_message(ADMINS[0], report)
 
-        if download_speed < 2 or upload_speed < 2 or ping > 485:    # Т.е. если какие-то странные значения, то не берём
+        if download_speed < 10 or upload_speed < 10 or ping > 485:    # Т.е. если какие-то странные значения, то не берём
             await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed, 1)    # Сохраняем ошибку
             report = f'{server_name}: speedtest-cli – speed too slow or ping too high: ' \
-                     f'download_speed < 2 or upload_speed < 2 or ping > 485 | Error: {output}'
+                     f'download_speed < 10 or upload_speed < 10 or ping > 485 | Error: {output}'
             logger.error(report)
             await bot.send_message(ADMINS[0], report)
         else:
