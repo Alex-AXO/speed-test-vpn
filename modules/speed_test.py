@@ -239,14 +239,20 @@ async def speed_test_key(key, key_id, server_name):
             ss_local.terminate()
             logger.debug('ss_local.terminate (finally)')
 
+            try:
+                # В конце удаляем временный файл
+                os.remove(JSON_FILE)
+
+            except Exception as e:
+                logger.error(f'Ошибка удаления файла ({JSON_FILE}): {e}')
+
             if MODE != 3:
                 try:
                     # В конце удаляем временный файл
-                    os.remove(JSON_FILE)
                     os.remove(FILE)
 
                 except Exception as e:
-                    logger.error(f'Ошибка удаления файла: {e}')
+                    logger.error(f'Ошибка удаления файла ({FILE}): {e}')
 
     else:   # Если ключа нет, то это localhost:
         try:
