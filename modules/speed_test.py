@@ -12,7 +12,7 @@ import aiohttp
 
 import db.main
 from initbot import bot
-from config import FILE, PORT, ADMINS, MODE, JSON_FILE
+from config import FILE, PORT, ADMINS, MODE, JSON_FILE, ERROR_PING, ERROR_SPEED
 
 
 @logger.catch
@@ -81,13 +81,15 @@ async def speed_test_cli(key_id, server_name, localhost=0):
         logger.debug(report)
         # await bot.send_message(ADMINS[0], report)
 
-        if download_speed < 10 or upload_speed < 10 or ping > 485:  # Т.е. если какие-то странные значения, то не берём
+        # Если какие-то странные значения, то не берём (слишком низкие или слишком высокий ping)
+        if download_speed < ERROR_SPEED or upload_speed < ERROR_SPEED or ping > ERROR_PING:
             await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed, 1)  # Сохраняем ошибку
             report = f'{server_name}: speedtest-cli – speed too slow or ping too high: ' \
-                     f'download_speed < 10 or upload_speed < 10 or ping > 485 | Error: {output}'
+                     f'download_speed or upload_speed < {ERROR_SPEED} or ping > {ERROR_PING} | Error: {output}'
             logger.error(report)
-            await bot.send_message(ADMINS[0], f"{server_name}: speedtest-cli: download_speed or upload_speed &lt; 10 "
-                                              f"or ping &gt; 485. Look at the logs.")
+            await bot.send_message(ADMINS[0], f"{server_name}: speedtest-cli: download_speed or "
+                                              f"upload_speed &lt; {ERROR_SPEED} or ping &gt; {ERROR_PING}. "
+                                              f"Look at the logs.")
         else:
             await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)  # Данные сохраняем в БД
 
