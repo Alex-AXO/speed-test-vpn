@@ -56,15 +56,15 @@ async def speed_test_cli(key_id, server_name, localhost=0):
     else:
         proxychains = 'proxychains'
 
+    if localhost:
+        result = subprocess.run(['speedtest-cli'], capture_output=True, text=True)
+    else:
+        result = subprocess.run([proxychains, 'speedtest-cli'], capture_output=True, text=True)
+
+    # Извлечение содержимого stdout
+    output = result.stdout
+
     try:
-        if localhost:
-            result = subprocess.run(['speedtest-cli'], capture_output=True, text=True)
-        else:
-            result = subprocess.run([proxychains, 'speedtest-cli'], capture_output=True, text=True)
-
-        # Извлечение содержимого stdout
-        output = result.stdout
-
         # Ищем в строке:
         ping = re.findall(r"(\d+(?:\.\d+)?) ms", output)[0]
         download_speed = re.findall(r"Download: (\d+\.\d+ .bit/s)", output)[0]
@@ -81,23 +81,25 @@ async def speed_test_cli(key_id, server_name, localhost=0):
         logger.debug(report)
         # await bot.send_message(ADMINS[0], report)
 
-        if download_speed < 10 or upload_speed < 10 or ping > 485:    # Т.е. если какие-то странные значения, то не берём
-            await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed, 1)    # Сохраняем ошибку
+        if download_speed < 10 or upload_speed < 10 or ping > 485:  # Т.е. если какие-то странные значения, то не берём
+            await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed, 1)  # Сохраняем ошибку
             report = f'{server_name}: speedtest-cli – speed too slow or ping too high: ' \
                      f'download_speed < 10 or upload_speed < 10 or ping > 485 | Error: {output}'
             logger.error(report)
-            await bot.send_message(ADMINS[0], f"{server_name}: speedtest-cli - speed too slow or ping too high: "
-                                              f"download_speed ⬅️ 10 or upload_speed ⬅️ 10 or ping ➡️ 485. "
-                                              f"Look at the logs.")
+            await bot.send_message(ADMINS[0], f"{server_name}: speedtest-cli: download_speed or upload_speed &lt; 10 "
+                                              f"or ping &gt; 485. Look at the logs.")
         else:
-            await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)    # Данные сохраняем в БД
+            await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)  # Данные сохраняем в БД
 
-    except Exception as e:
-        await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
-        report = f'{server_name}: proxychains speedtest-cli: {e}'
+    except Exception as error:
+
+        await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)    # Сохраняем данные в БД (с пометкой ошибки)
+
+        report = f'{server_name}: proxychains speedtest-cli: {error}'
         logger.error(report)
-        logger.error(f"Exception type: {type(e)}, Exception message: {str(e)}")
         await bot.send_message(ADMINS[0], report)
+
+        logger.error(f'Output: {output}')
 
 
 @logger.catch
@@ -122,8 +124,8 @@ async def download_file(key_id, server_name, localhost=0):
         last_row = result.stderr.split('\n')[-2].split()  # Получаем последнюю строку в выводе curl
         logger.debug(last_row)
 
-        average_speed = last_row[-6]    # Извлечение последнего вхождения скорости из строки
-        average_speed = convert_speed_to_kilobytes(average_speed)   # Преобразование средней скорости в килобайты
+        average_speed = last_row[-6]  # Извлечение последнего вхождения скорости из строки
+        average_speed = convert_speed_to_kilobytes(average_speed)  # Преобразование средней скорости в килобайты
 
         if localhost:
             command = ' '.join(request[0:2])
@@ -135,11 +137,11 @@ async def download_file(key_id, server_name, localhost=0):
         report = f"{server_name} | key №{key_id}:\n" \
                  f"Command: {command} + File \n" \
                  f"File: {file}\n" \
-                 f"The operation took {seconds} sec. ({round(seconds / 60, 1)} мин.),\n"\
+                 f"The operation took {seconds} sec. ({round(seconds / 60, 1)} мин.),\n" \
                  f"The average speed is {round(average_speed / 1024, 2)} MB/s."
         logger.success(report)
         # await bot.send_message(ADMINS[0], report)
-        await db.main.add_download_info(key_id, average_speed, seconds)     # Запись в БД результата
+        await db.main.add_download_info(key_id, average_speed, seconds)  # Запись в БД результата
 
     except Exception as e:
         await db.main.add_download_info(key_id, 0, 0, 1)
@@ -182,14 +184,14 @@ async def speed_test_key(key, key_id, server_name):
     """Main function for new speedtest-cli and download file (curl)"""
     await asyncio.sleep(2)
 
-    if key:     # Если ключ есть (не localhost), то:
+    if key:  # Если ключ есть (не localhost), то:
         # Расшифровываем ключ
         key = key[5:]  # Удаляем 'ss://'
-        first_part, second_part = key.split('@')    # Разделяем ключ на две части
-        decoded_first_part = base64.urlsafe_b64decode(first_part + "==").decode('utf-8')    # Декодируем первую часть
-        cipher, password = decoded_first_part.split(':')    # Получаем метод шифрования и пароль
+        first_part, second_part = key.split('@')  # Разделяем ключ на две части
+        decoded_first_part = base64.urlsafe_b64decode(first_part + "==").decode('utf-8')  # Декодируем первую часть
+        cipher, password = decoded_first_part.split(':')  # Получаем метод шифрования и пароль
         ip, port = second_part.split(':')  # Получаем IP
-        port = port.split('/')[0]   # Получаем port
+        port = port.split('/')[0]  # Получаем port
 
         logger.debug(f"Decoded server data: {cipher=}, password..., {ip=}, {port=}")
 
@@ -205,13 +207,13 @@ async def speed_test_key(key, key_id, server_name):
             "method": cipher
         }
 
-        config_str = json.dumps(config)     # Конвертируем в строку
+        config_str = json.dumps(config)  # Конвертируем в строку
 
         with open(JSON_FILE, 'w') as f:
-            f.write(config_str)     # Запишем конфигурацию в файл
+            f.write(config_str)  # Запишем конфигурацию в файл
 
         await asyncio.sleep(1)
-        try:    # Попытка подключения к серверу VPN
+        try:  # Попытка подключения к серверу VPN
             # Запускаем ss-local, указывая путь к временному файлу конфигурации
             ss_local = subprocess.Popen(['ss-local', '-v', '-c', JSON_FILE])
             logger.debug(f'{ss_local=}')
@@ -219,13 +221,13 @@ async def speed_test_key(key, key_id, server_name):
             await asyncio.sleep(4)
 
             if MODE != 3:
-                await download_file(key_id, server_name)   # Функция скачивания файла (для замера скорости и времени)
+                await download_file(key_id, server_name)  # Функция скачивания файла (для замера скорости и времени)
                 await asyncio.sleep(2)
 
             await speed_test_cli(key_id, server_name)  # Функция измерения скорости через speedtest-cli
 
             if MODE == 1:
-                await save_keys_number(server_name, key_id)     # Функция записи количества ключей на сервере
+                await save_keys_number(server_name, key_id)  # Функция записи количества ключей на сервере
 
         except KeyboardInterrupt:
             # Когда нажимается Ctrl + C, мы попадаем сюда
@@ -257,12 +259,13 @@ async def speed_test_key(key, key_id, server_name):
                 except Exception as e:
                     logger.error(f'Ошибка удаления файла ({FILE}): {e}')
 
-    else:   # Если ключа нет, то это localhost:
+    else:  # Если ключа нет, то это localhost:
         try:
             await asyncio.sleep(1)
 
             if MODE != 3:
-                await download_file(key_id, server_name, localhost=1)   # Функция скачивания файла (замер: скорости/времени)
+                await download_file(key_id, server_name,
+                                    localhost=1)  # Функция скачивания файла (замер: скорости/времени)
                 await asyncio.sleep(1)
 
             await speed_test_cli(key_id, server_name, localhost=1)  # Функция измерения скорости через speedtest-cli
