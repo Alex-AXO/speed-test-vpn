@@ -439,7 +439,7 @@ async def check_new_rows(table):
 async def get_server_active_keys(server_name: str):
     """Получение кол-ва активных ключей на сервере"""
 
-    if server_name == "axo-outline-rus":
+    if server_name == "axo-901.tw.ru":
         db_path = DB_VPN1r
     else:
         db_path = DB_VPN1
@@ -457,7 +457,7 @@ async def get_server_active_keys(server_name: str):
 async def get_server_url(server_name: str) -> str:
     """Получение URL API сервера для проверки"""
 
-    if server_name == "axo-outline-rus":
+    if server_name == "axo-901.tw.ru":
         db_path = DB_VPN1r
     else:
         db_path = DB_VPN1
