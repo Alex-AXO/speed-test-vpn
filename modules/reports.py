@@ -152,7 +152,7 @@ async def show_data(speedtest_info, speedtest_errors, download_info, download_er
             except TypeError:
                 active_key_text = ''
 
-        server_name = server_name.replace(".", "\u00A0|\u00A0")
+        # server_name = server_name.replace(".", "\u00A0|\u00A0")
         log_text = f'''{key_id=} | {server_name} {active_key_text}
 | {avg_ping=} ms | {avg_download=} Mb/s | {avg_upload=} Mb/s | errs: {data['error_count_speedtest']}
 | download speed: {avg_speed_download} MB/s | time: {avg_time_download} sec. | errs: {data['error_count_download']}'''
