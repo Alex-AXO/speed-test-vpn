@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import aiosqlite
 
 from initbot import logger
-from config import DB_PATH, NEW_ROWS_IN_DAY, DB_VPN1, DB_VPN1r
+from config import DB_PATH, NEW_ROWS_IN_DAY, DB_VPN1, DB_VPN1r, DB_VPN1f
 
 
 # - - - Ключи, сервера - - -
@@ -459,6 +459,8 @@ async def get_server_url(server_name: str) -> str:
 
     if server_name == "axo-901.tw.ru":
         db_path = DB_VPN1r
+    elif server_name == "axo-301.ae.se":
+        db_path = DB_VPN1f
     else:
         db_path = DB_VPN1
 
