@@ -441,6 +441,8 @@ async def get_server_active_keys(server_name: str):
 
     if server_name == "axo-901.tw.ru":
         db_path = DB_VPN1r
+    elif server_name == "axo-301.ae.se":
+        db_path = DB_VPN1f
     else:
         db_path = DB_VPN1
 
