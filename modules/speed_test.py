@@ -222,9 +222,9 @@ async def speed_test_key(key, key_id, server_name):
 
             await asyncio.sleep(4)
 
-            if MODE != 3:
-                await download_file(key_id, server_name)  # Функция скачивания файла (для замера скорости и времени)
-                await asyncio.sleep(2)
+            # if MODE != 3:
+            #     await download_file(key_id, server_name)  # Функция скачивания файла (для замера скорости и времени)
+            #     await asyncio.sleep(2)
 
             await speed_test_cli(key_id, server_name)  # Функция измерения скорости через speedtest-cli
 
@@ -253,22 +253,22 @@ async def speed_test_key(key, key_id, server_name):
             except Exception as e:
                 logger.error(f'Ошибка удаления файла ({JSON_FILE}): {e}')
 
-            if MODE != 3:
-                try:
-                    # В конце удаляем временный файл
-                    os.remove(FILE)
-
-                except Exception as e:
-                    logger.error(f'Ошибка удаления файла ({FILE}): {e}')
+            # if MODE != 3:
+            #     try:
+            #         # В конце удаляем временный файл
+            #         os.remove(FILE)
+            #
+            #     except Exception as e:
+            #         logger.error(f'Ошибка удаления файла ({FILE}): {e}')
 
     else:  # Если ключа нет, то это localhost:
         try:
             await asyncio.sleep(1)
 
-            if MODE != 3:
-                await download_file(key_id, server_name,
-                                    localhost=1)  # Функция скачивания файла (замер: скорости/времени)
-                await asyncio.sleep(1)
+            # if MODE != 3:
+            #     await download_file(key_id, server_name,
+            #                         localhost=1)  # Функция скачивания файла (замер: скорости/времени)
+            #     await asyncio.sleep(1)
 
             await speed_test_cli(key_id, server_name, localhost=1)  # Функция измерения скорости через speedtest-cli
 

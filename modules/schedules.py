@@ -11,8 +11,8 @@ import db
 async def speed_tests():
     logger.debug('Start speed-tests...')
 
-    if MODE != 3:
-        logger.debug(f'Test-file: {FILE}')
+    # if MODE != 3:
+    #     logger.debug(f'Test-file: {FILE}')
 
     keys = await db.main.get_server_keys()
     # print(keys)
@@ -43,12 +43,12 @@ async def is_new_data():
         logger.error(report)
         await bot.send_message(ADMINS[0], report)
 
-    if MODE != 3:
-        table = 'download_files'
-        if not await db.main.check_new_rows(table):
-            report = f'No (or small) data was added (for day) to the table: {table}'
-            logger.error(report)
-            await bot.send_message(ADMINS[0], report)
+    # if MODE != 3:
+    #     table = 'download_files'
+    #     if not await db.main.check_new_rows(table):
+    #         report = f'No (or small) data was added (for day) to the table: {table}'
+    #         logger.error(report)
+    #         await bot.send_message(ADMINS[0], report)
 
 
 @logger.catch
@@ -75,12 +75,16 @@ async def notify_unavailable_servers():
             # logger.debug(f'{server_status=}')
 
             if not server_status:
-                await asyncio.sleep(8)  # ждём 5 секунд перед повторной проверкой
+                await asyncio.sleep(7)  # ждём 7 секунд перед повторной проверкой
                 second_check_results = await check_server_availability(url)
 
                 if not second_check_results:
-                    await bot.send_message(ADMINS[0], f'Внимание! Сервер {server_name} не доступен!')
-                    logger.error(f'Attention! Server {server_name} is not available!')
+                    await asyncio.sleep(7)  # ждём 7 секунд перед повторной проверкой
+                    third_check_results = await check_server_availability(url)
+
+                    if not third_check_results:
+                        await bot.send_message(ADMINS[0], f'Внимание! Сервер {server_name} не доступен!')
+                        logger.error(f'Attention! Server {server_name} is not available!')
 
         await asyncio.sleep(2)
 
