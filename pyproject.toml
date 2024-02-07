@@ -28,3 +28,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 speed-test = "main.main:main"
+update-db = "update_db.py:main"
