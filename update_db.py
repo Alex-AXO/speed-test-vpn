@@ -155,11 +155,11 @@ def main():
     #     'UPDATE server_keys SET server_name = "axo-022.ae.se" WHERE server_name = "axo-301.ae.se"'
         '''
         UPDATE server_keys
-            SET server_name = "axo-031.pq.us",
-                key = "ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTo5NDFpYkZvUEtHTjI4MFd6MllnbTlV@185.250.151.172:48870/?outline=1"
-            WHERE server_name = "axo-031.ae.us"
+            SET key = "ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTo2bkFsdE5OZWY5czYxcjJaUmlVY0dt@178.130.132.24:20659/?outline=1"
+            WHERE server_name = "axo-034.tw.nl"
         '''
     ]
+
 
     for sql_query in sql_queries:
         cursor.execute(sql_query)
