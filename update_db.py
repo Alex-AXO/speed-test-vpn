@@ -1,6 +1,7 @@
+# poetry shell
+# python ./update_db.py
 
 import sqlite3
-
 from config import DB_PATH
 
 
@@ -155,7 +156,7 @@ def main():
     #     'UPDATE server_keys SET server_name = "axo-022.ae.se" WHERE server_name = "axo-301.ae.se"'
         '''
         UPDATE server_keys
-            SET key = "ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTo2bkFsdE5OZWY5czYxcjJaUmlVY0dt@178.130.132.24:20659/?outline=1"
+            SET key = "ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpZWW5lZmpQVEhMUjFjckxSSFNFcVhU@147.45.133.24:20659/?outline=1"
             WHERE server_name = "axo-034.tw.nl"
         '''
     ]
@@ -174,3 +175,6 @@ if __name__ == '__main__':
     main()
     # db_create()
     # db_func()
+
+    # poetry shell
+    # python ./update_db.py
