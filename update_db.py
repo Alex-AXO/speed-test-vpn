@@ -1,5 +1,5 @@
 # poetry shell
-# python ./update_db.py
+# poetry run python ./update_db.py
 
 import sqlite3
 from config import DB_PATH
@@ -105,60 +105,13 @@ def main():
     cursor = conn.cursor()
 
     sql_queries = [
-    #     'PRAGMA foreign_keys = 0;',
-    #     'CREATE TABLE sqlitestudio_temp_table AS SELECT * FROM servers;',
-    #     'DROP TABLE servers;',
-    #     '''CREATE TABLE servers (
-    # server_id     INTEGER PRIMARY KEY AUTOINCREMENT,
-    # name          TEXT    NOT NULL
-    #                       UNIQUE,
-    # api_url       TEXT    NOT NULL
-    #                       UNIQUE,
-    # server_status INTEGER,
-    # max_users     INTEGER,
-    # note          TEXT,
-    # active_users  INTEGER,
-    # country       TEXT,
-    # hoster        TEXT,
-    # chatgpt       INTEGER);''',
-    #     '''INSERT INTO servers (
-    #                     server_id,
-    #                     name,
-    #                     api_url,
-    #                     server_status,
-    #                     max_users,
-    #                     note,
-    #                     active_users
-    #                 )
-    #                 SELECT server_id,
-    #                        name,
-    #                        api_url,
-    #                        server_status,
-    #                        max_users,
-    #                        note,
-    #                        active_users
-    #                   FROM sqlitestudio_temp_table;''',
-    #     'DROP TABLE sqlitestudio_temp_table;',
-    #     'PRAGMA foreign_keys = 1;',
-    #     'UPDATE server_keys SET server_name = "axo-901.tw.ru" WHERE server_name = "axo-outline-rus"',
-    #     'UPDATE server_keys SET server_name = "axo-003.vd.nl" WHERE server_name = "axo-outline-03"',
-    #     'UPDATE server_keys SET server_name = "axo-004.vd.nl" WHERE server_name = "axo-outline-04"',
-    #     'UPDATE server_keys SET server_name = "axo-005.vd.nl" WHERE server_name = "axo-outline-05"',
-    #     'UPDATE server_keys SET server_name = "axo-006.vd.nl" WHERE server_name = "axo-outline-06"',
-    #     'UPDATE server_keys SET server_name = "axo-007.vd.nl" WHERE server_name = "axo-outline-07"',
-    #     'UPDATE server_keys SET server_name = "axo-008.ae.se" WHERE server_name = "axo-outline-08"',
-    #     'UPDATE server_keys SET server_name = "axo-009.pq.se" WHERE server_name = "axo-outline-09"',
-    #     'UPDATE server_keys SET server_name = "axo-010.ae.de" WHERE server_name = "axo-outline-10"',
-    #     'UPDATE server_keys SET server_name = "axo-011.ae.at" WHERE server_name = "axo-outline-11"',
-    #     'UPDATE server_keys SET server_name = "axo-012.pq.ch" WHERE server_name = "axo-outline-12"',
-    #     'UPDATE server_keys SET server_name = "axo-013.ae.se" WHERE server_name = "axo-outline-13"',
-    #     'UPDATE server_keys SET server_name = "axo-014.vd.nl" WHERE server_name = "axo-outline-14"',
-    #     'UPDATE server_keys SET server_name = "axo-022.ae.se" WHERE server_name = "axo-301.ae.se"'
-        '''
-        UPDATE server_keys
-            SET key = "ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpZWW5lZmpQVEhMUjFjckxSSFNFcVhU@147.45.133.24:20659/?outline=1"
-            WHERE server_name = "axo-034.tw.nl"
-        '''
+        # '''
+        # UPDATE server_keys
+        #     SET key = "ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpZWW5lZmpQVEhMUjFjckxSSFNFcVhU@147.45.133.24:20659/?outline=1"
+        #     WHERE server_name = "axo-034.tw.nl"
+        # '''
+        'UPDATE server_keys SET key = REPLACE(key, "176.124.200.248", "77.246.101.38")',
+        # 'UPDATE key_dates SET key = REPLACE(key, "176.124.200.248", "77.246.101.38")',
     ]
 
 
@@ -175,6 +128,3 @@ if __name__ == '__main__':
     main()
     # db_create()
     # db_func()
-
-    # poetry shell
-    # python ./update_db.py
