@@ -111,7 +111,7 @@ def main():
         #     WHERE server_name = "axo-034.tw.nl"
         # '''
         'UPDATE server_keys SET key = REPLACE(key, "176.124.202.194", "91.201.114.89")',
-        'UPDATE key_dates SET key = REPLACE(key, "176.124.210.31", "88.210.12.48")',
+        'UPDATE server_keys SET key = REPLACE(key, "176.124.210.31", "88.210.12.48")',
     ]
 
 
