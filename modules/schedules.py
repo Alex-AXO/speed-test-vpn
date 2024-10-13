@@ -1,5 +1,8 @@
 from loguru import logger
 import asyncio
+import aiohttp
+
+from typing import List, Tuple
 
 from modules.speed_test import speed_test_key, save_keys_number, check_server_availability
 from config import FILE, ADMINS, MODE
@@ -54,38 +57,44 @@ async def is_new_data():
 @logger.catch
 async def notify_unavailable_servers():
     """Проверяем сервера на доступность"""
-
-    # logger.debug('Start notify_unavailable_servers()')
+    logger.debug('Start notify_unavailable_servers()')
 
     keys = await db.main.get_server_keys()
+    unavailable_servers = await check_servers_availability(keys)
 
+    for server_name in unavailable_servers:
+        message = f'Warning! Server {server_name} is unavailable!'
+        await bot.send_message(ADMINS[0], message)
+        logger.error(message)
+
+    logger.debug('End notify_unavailable_servers()')
+
+
+async def check_servers_availability(keys: List[Tuple]) -> List[str]:
+    """Проверяет доступность серверов асинхронно"""
+    tasks = []
     for key in keys:
-        # key_id = key[0]
-        server_name = key[1]
-        key = key[2]
-
-        # logger.debug(f'{server_name=}, {key_id=}')
-
-        if key:
-
+        server_name, key_value = key[1], key[2]
+        if key_value:
             url = await db.main.get_server_url(server_name)
-            # logger.debug(f'{url=}')
+            if url:
+                task = check_server_with_retries(url, server_name)
+                tasks.append(task)
 
-            server_status = await check_server_availability(url)
-            # logger.debug(f'{server_status=}')
+    results = await asyncio.gather(*tasks)
+    return [server for server, is_available in results if not is_available]
 
-            if not server_status:
-                await asyncio.sleep(7)  # ждём 7 секунд перед повторной проверкой
-                second_check_results = await check_server_availability(url)
 
-                if not second_check_results:
-                    await asyncio.sleep(7)  # ждём 7 секунд перед повторной проверкой
-                    third_check_results = await check_server_availability(url)
+async def check_server_with_retries(url: str, server_name: str, retries: int = 3, delay: int = 7) -> Tuple[str, bool]:
+    """Проверяет доступность сервера с повторными попытками"""
+    for attempt in range(retries):
+        if await check_server_availability(url):
+            return server_name, True
+        if attempt < retries - 1:  # Не ждем после последней попытки
+            await asyncio.sleep(delay)
+    logger.warning(f"Server {server_name} is unavailable after {retries} attempts")
+    return server_name, False
 
-                    if not third_check_results:
-                        await bot.send_message(ADMINS[0], f'Внимание! Сервер {server_name} не доступен!')
-                        logger.error(f'Attention! Server {server_name} is not available!')
-
-        await asyncio.sleep(2)
-
-    # logger.debug('End')
+# Предполагается, что функция check_server_availability уже существует в вашем коде
+# async def check_server_availability(url: str, timeout: int = 5) -> bool:
+#     ...

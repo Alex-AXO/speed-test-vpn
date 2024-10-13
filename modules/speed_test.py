@@ -87,9 +87,9 @@ async def speed_test_cli(key_id, server_name, localhost=0):
             report = f'{server_name}: speedtest-cli – speed too slow or ping too high: ' \
                      f'download_speed or upload_speed < {ERROR_SPEED} or ping > {ERROR_PING} | Error: {output}'
             logger.error(report)
-            await bot.send_message(ADMINS[0], f"{server_name}: speedtest-cli: download_speed or "
-                                              f"upload_speed &lt; {ERROR_SPEED} or ping &gt; {ERROR_PING}. "
-                                              f"Look at the logs.")
+            # await bot.send_message(ADMINS[0], f"{server_name}: speedtest-cli: download_speed or "
+            #                                   f"upload_speed &lt; {ERROR_SPEED} or ping &gt; {ERROR_PING}. "
+            #                                   f"Look at the logs.")
         else:
             await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)  # Данные сохраняем в БД
 
@@ -283,20 +283,25 @@ async def speed_test_key(key, key_id, server_name):
             await bot.send_message(ADMINS[0], report)
 
 
-async def check_server_availability(url: str, timeout: int = 5):
+@logger.catch
+async def check_server_availability(url: str, timeout: int = 5) -> bool:
     """
-    Проверяет доступность сервера по URL.
+    Проверяет доступность VPN-сервера по URL.
     :param url: URL сервера.
     :param timeout: Таймаут в секундах.
-    :return: True если сервер доступен, иначе False.
+    :return: True если соединение с сервером установлено, иначе False.
     """
-
-    # logger.debug(f'Checking server: URL: {url}')
-
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, timeout=timeout, ssl=False) as response:
+                # Проверяем только возможность установить соединение
                 return True
+    except aiohttp.ClientError as e:
+        logger.error(f"Connection error to {url}. Error: {type(e).__name__}: {e}")
+        return False
+    except asyncio.TimeoutError:
+        logger.error(f"Timeout error connecting to {url}. Timeout: {timeout}s")
+        return False
     except Exception as e:
-        logger.error(f"Error check_server_availability(). Exception type: {type(e)}. Exception message: {e}.")
+        logger.error(f"Unexpected error checking {url}. Error type: {type(e).__name__}. Message: {e}")
         return False
