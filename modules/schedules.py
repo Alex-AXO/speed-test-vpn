@@ -71,10 +71,8 @@ async def notify_unavailable_servers():
 
 
 async def check_servers_availability(keys: List[Tuple]) -> List[str]:
-    """Проверяет доступность серверов асинхронно"""
     tasks = []
-    for key in keys:
-        server_name, key_value = key[1], key[2]
+    for key_id, server_name, key_value in keys:
         if key_value:
             url = await db.main.get_server_url(server_name)
             if url:
@@ -86,15 +84,11 @@ async def check_servers_availability(keys: List[Tuple]) -> List[str]:
 
 
 async def check_server_with_retries(url: str, server_name: str, retries: int = 3, delay: int = 7) -> Tuple[str, bool]:
-    """Проверяет доступность сервера с повторными попытками"""
     for attempt in range(retries):
         if await check_server_availability(url):
             return server_name, True
-        if attempt < retries - 1:  # Не ждем после последней попытки
+        logger.warning(f"Attempt {attempt + 1}/{retries} failed for server {server_name}")
+        if attempt < retries - 1:
             await asyncio.sleep(delay)
-    logger.warning(f"Server {server_name} is unavailable after {retries} attempts")
+    logger.error(f"Server {server_name} is unavailable after {retries} attempts")
     return server_name, False
-
-# Предполагается, что функция check_server_availability уже существует в вашем коде
-# async def check_server_availability(url: str, timeout: int = 5) -> bool:
-#     ...

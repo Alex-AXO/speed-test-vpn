@@ -111,7 +111,7 @@ async def speed_test_cli(key_id, server_name, localhost=0):
             error_msg = f'{server_name}: Unexpected error in speedtest-cli: {str(error)}'
             logger.error(error_msg)
             await bot.send_message(ADMINS[0], error_msg)
-            logger.error(f'Output: {output}')
+            logger.error(f'Output: {vars().get("output") or "N/A"}')
             return
 
 
