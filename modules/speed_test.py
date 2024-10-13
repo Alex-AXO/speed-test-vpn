@@ -15,18 +15,17 @@ from initbot import bot
 from config import FILE, PORT, ADMINS, MODE, JSON_FILE, ERROR_PING, ERROR_SPEED
 
 
-@logger.catch
-def convert_to_mbits(speed_str):
-    """Преобразование скорости скачивания в Mbit/s"""
-    speed, unit = speed_str.split()
-
-    speed = float(speed)
-    if unit.lower() == 'kbit/s':
-        speed /= 1000  # convert from Kbit/s to Mbit/s
-    elif unit.lower() == 'gbit/s':
-        speed *= 1000  # convert from Gbit/s to Mbit/s
-
-    return speed
+def convert_to_mbits(speed_string):
+    value, unit = speed_string.split()
+    value = float(value)
+    if 'Mbit/s' in unit:
+        return value
+    elif 'Kbit/s' in unit:
+        return value / 1000
+    elif 'Gbit/s' in unit:
+        return value * 1000
+    else:
+        raise ValueError(f"Неизвестная единица измерения: {unit}")
 
 
 @logger.catch
@@ -51,57 +50,69 @@ async def speed_test_cli(key_id, server_name, localhost=0):
     """Замеряем скорость через speedtest-cli"""
     logger.debug(f"{server_name}: speedtest-cli started")
 
-    if MODE == 2:
-        proxychains = 'proxychains4'
-    else:
-        proxychains = 'proxychains'
+    proxychains = 'proxychains4' if MODE == 2 else 'proxychains'
+    command = ['speedtest-cli'] if localhost else [proxychains, 'speedtest-cli']
 
-    if localhost:
-        result = subprocess.run(['speedtest-cli'], capture_output=True, text=True)
-    else:
-        result = subprocess.run([proxychains, 'speedtest-cli'], capture_output=True, text=True)
+    max_attempts = 3
+    for attempt in range(1, max_attempts + 1):
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await process.communicate()
+            output = stdout.decode()
 
-    # Извлечение содержимого stdout
-    output = result.stdout
+            if process.returncode != 0:
+                raise subprocess.CalledProcessError(process.returncode, command, output, stderr)
 
-    try:
-        # Ищем в строке:
-        ping = re.findall(r"(\d+(?:\.\d+)?) ms", output)[0]
-        download_speed = re.findall(r"Download: (\d+\.\d+ .bit/s)", output)[0]
-        upload_speed = re.findall(r"Upload: (\d+\.\d+ .bit/s)", output)[0]
+            ping_match = re.search(r"(\d+(?:\.\d+)?) ms", output)
+            download_match = re.search(r"Download: (\d+\.\d+ .bit/s)", output)
+            upload_match = re.search(r"Upload: (\d+\.\d+ .bit/s)", output)
 
-        ping = round(float(ping))
-        download_speed = convert_to_mbits(download_speed)
-        upload_speed = convert_to_mbits(upload_speed)
+            if not all([ping_match, download_match, upload_match]):
+                raise ValueError("Не удалось найти все необходимые значения в выводе speedtest-cli")
 
-        report = f'speedtest-cli result:\n' \
-                 f'{ping=} ms,\n' \
-                 f'{download_speed=} Mbit/s,\n' \
-                 f'{upload_speed=} Mbit/s'
-        logger.debug(report)
-        # await bot.send_message(ADMINS[0], report)
+            ping = round(float(ping_match.group(1)))
+            download_speed = convert_to_mbits(download_match.group(1))
+            upload_speed = convert_to_mbits(upload_match.group(1))
 
-        # Если какие-то странные значения, то не берём (слишком низкие или слишком высокий ping)
-        if download_speed < ERROR_SPEED or upload_speed < ERROR_SPEED or ping > ERROR_PING:
-            await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed, 1)  # Сохраняем ошибку
-            report = f'{server_name}: speedtest-cli – speed too slow or ping too high: ' \
-                     f'download_speed or upload_speed < {ERROR_SPEED} or ping > {ERROR_PING} | Error: {output}'
-            logger.error(report)
-            # await bot.send_message(ADMINS[0], f"{server_name}: speedtest-cli: download_speed or "
-            #                                   f"upload_speed &lt; {ERROR_SPEED} or ping &gt; {ERROR_PING}. "
-            #                                   f"Look at the logs.")
-        else:
-            await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)  # Данные сохраняем в БД
+            report = (f'speedtest-cli result:\n'
+                      f'{ping=} ms,\n'
+                      f'{download_speed=} Mbit/s,\n'
+                      f'{upload_speed=} Mbit/s')
+            logger.debug(report)
 
-    except Exception as error:
+            if download_speed < ERROR_SPEED or upload_speed < ERROR_SPEED or ping > ERROR_PING:
+                await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed, 1)
+                error_msg = (f'{server_name}: speedtest-cli – speed too slow or ping too high: '
+                             f'download_speed={download_speed} or upload_speed={upload_speed} < {ERROR_SPEED} '
+                             f'or ping={ping} > {ERROR_PING}')
+                logger.warning(error_msg)
+                await bot.send_message(ADMINS[0], error_msg)
+            else:
+                await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)
 
-        await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)    # Сохраняем данные в БД (с пометкой ошибки)
+            return  # Успешное выполнение, выходим из функции
 
-        report = f'{server_name}: proxychains speedtest-cli: {error}'
-        logger.error(report)
-        await bot.send_message(ADMINS[0], report)
+        except (subprocess.CalledProcessError, ValueError, IndexError) as error:
+            logger.error(f"{server_name}: Attempt {attempt}/{max_attempts} failed: {str(error)}")
+            if attempt == max_attempts:
+                await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
+                error_msg = f'{server_name}: speedtest-cli failed after {max_attempts} attempts: {str(error)}'
+                logger.error(error_msg)
+                await bot.send_message(ADMINS[0], error_msg)
+            else:
+                await asyncio.sleep(5)  # Ждем 5 секунд перед следующей попыткой
 
-        logger.error(f'Output: {output}')
+        except Exception as error:
+            await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
+            error_msg = f'{server_name}: Unexpected error in speedtest-cli: {str(error)}'
+            logger.error(error_msg)
+            await bot.send_message(ADMINS[0], error_msg)
+            logger.error(f'Output: {output}')
+            return
 
 
 @logger.catch

@@ -63,7 +63,7 @@ async def notify_unavailable_servers():
     unavailable_servers = await check_servers_availability(keys)
 
     for server_name in unavailable_servers:
-        message = f'Warning! Server {server_name} is unavailable!'
+        message = f'🛑 Warning! Server {server_name} is unavailable!'
         await bot.send_message(ADMINS[0], message)
         logger.error(message)
 
