@@ -98,7 +98,8 @@ async def show_data(speedtest_info, speedtest_errors, download_info, download_er
 
     # Преобразовать списки кортежей в словари для лёгкого доступа
     speedtest_info_dict = {
-        key_id: (avg_ping, avg_download, avg_upload) for key_id, avg_ping, avg_download, avg_upload in speedtest_info
+        key_id: (server_name, avg_ping, avg_download, avg_upload)
+        for key_id, server_name, avg_ping, avg_download, avg_upload in speedtest_info
     }
     speedtest_errors_dict = {key_id: error_count for key_id, error_count in speedtest_errors}
 
@@ -111,7 +112,8 @@ async def show_data(speedtest_info, speedtest_errors, download_info, download_er
                                                         download_info_dict.keys(),
                                                         download_errors_dict.keys()):
         # Получить средние скорости и времена из двух словарей, возвращаем 0, если не найдено.
-        avg_ping, avg_download, avg_upload = speedtest_info_dict.get(key_id, (0, 0))
+        # avg_ping, avg_download, avg_upload = speedtest_info_dict.get(key_id, (0, 0))
+        server_name, avg_ping, avg_download, avg_upload = speedtest_info_dict.get(key_id, ("unknown", 0, 0, 0))
         avg_speed_download, avg_time_download = download_info_dict.get(key_id, (0, 0))
 
         # Получить количество ошибок из двух словарей, возвращаем 0, если не найдено.
@@ -133,8 +135,20 @@ async def show_data(speedtest_info, speedtest_errors, download_info, download_er
     if active_keys:
         keys_dict = dict(active_keys)
 
-    # Вывод информации
-    for key_id, data in combined_data.items():
+    # Сначала получаем имена серверов асинхронно
+    server_names = {}
+    for key_id in combined_data:
+        server_name = (await db.main.get_server_name(key_id))[0]
+        server_names[key_id] = server_name
+
+    # Сортируем combined_data по имени сервера, используя уже полученные имена
+    sorted_combined_data = sorted(combined_data.items(), key=lambda x: server_names[x[0]])
+
+    # Теперь выводим отсортированные данные
+    messages = []
+    current_message = ""
+
+    for key_id, data in sorted_combined_data:
         avg_ping = round(data['avg_ping'])
         avg_download = round(data['avg_download'])
         avg_upload = round(data['avg_upload'])
@@ -142,23 +156,36 @@ async def show_data(speedtest_info, speedtest_errors, download_info, download_er
         avg_speed_download = round(data['avg_speed_download'] / 1024, 1)
         avg_time_download = round(data['avg_time_download'], 1)
 
-        server_name = (await db.main.get_server_name(key_id))[0]
+        server_name = server_names[key_id]
 
         active_key_text = ''
         if active_keys:
             active_key = keys_dict.get(key_id)
             try:
-                active_key_text = f"| {int(active_key)}"
+                active_key_text = f"| keys: {int(active_key)}"
             except TypeError:
                 active_key_text = ''
 
-        # server_name = server_name.replace(".", "\u00A0|\u00A0")
         log_text = f'''{key_id=} | {server_name} {active_key_text}
-| {avg_ping=} ms | {avg_download=} Mb/s | {avg_upload=} Mb/s | errs: {data['error_count_speedtest']}
-| download speed: {avg_speed_download} MB/s | time: {avg_time_download} sec. | errs: {data['error_count_download']}'''
+    | {avg_ping=} ms | {avg_download=} Mb/s | {avg_upload=} Mb/s | errs: {data['error_count_speedtest']}
+    | download speed: {avg_speed_download} MB/s | time: {avg_time_download} sec. | errs: {data['error_count_download']}'''
         logger.debug(log_text)
 
-        report = f'''<b>{server_name}</b> {active_key_text} | errs: {data['error_count_speedtest']}
-{avg_ping} ms  |  <b>{avg_download}</b> MB/s  |  <b>{avg_upload}</b> Mb/s
-<i>[ {avg_speed_download} MB/s  |  {avg_time_download} sec. |  errs: {data['error_count_download']} ]</i>'''
-        await bot.send_message(ADMINS[0], report)
+        report = f'''
+{server_name} {active_key_text} | errs: {data['error_count_speedtest']}
+⧖ {avg_ping} ms  ↓ <b>{avg_download}</b> Mbps  ↑ <b>{avg_upload}</b> Mbps
+.
+.
+'''
+
+        if len(current_message + report) > 4000:  # Telegram limit is 4096, we use 4000 to be safe
+            messages.append(current_message)
+            current_message = report
+        else:
+            current_message += report
+
+    if current_message:
+        messages.append(current_message)
+
+    for message in messages:
+        await bot.send_message(ADMINS[0], message)

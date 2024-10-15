@@ -137,15 +137,19 @@ async def get_speedtest_info_last(days):
 
         async with db.execute("""
         SELECT 
-            key_id, 
-            AVG(ping) as avg_ping,
-            AVG(download_speed) as avg_download, 
-            AVG(upload_speed) as avg_upload
-        FROM speed_tests 
+            st.key_id, 
+            sk.server_name,  -- Добавляем имя сервера
+            AVG(st.ping) as avg_ping,
+            AVG(st.download_speed) as avg_download, 
+            AVG(st.upload_speed) as avg_upload
+        FROM speed_tests st
+        JOIN server_keys sk ON st.key_id = sk.key_id  -- Присоединяем таблицу server_keys
         WHERE 
-            date_time >= datetime('now', ?) AND 
-            error = 0
-        GROUP BY key_id;""", (f'-{days} days',)) as result:
+            st.date_time >= datetime('now', ?) AND 
+            st.error = 0
+        GROUP BY st.key_id
+        ORDER BY sk.server_name;  -- Сортируем по имени сервера
+        """, (f'-{days} days',)) as result:
             result = await result.fetchall()
 
         async with db.execute("""
@@ -218,16 +222,19 @@ async def get_speedtest_info_week(week):
 
         async with db.execute("""
         SELECT 
-            key_id, 
+            st.key_id, 
+            sk.server_name, 
             AVG(ping) as avg_ping,
             AVG(download_speed) as avg_download, 
             AVG(upload_speed) as avg_upload
-        FROM speed_tests 
+        FROM speed_tests st
+        JOIN server_keys sk ON st.key_id = sk.key_id
         WHERE 
             strftime('%Y', date_time) = ? AND
             strftime('%W', date_time) = ? AND 
             error = 0
-        GROUP BY key_id;""", (str(year), str(week).zfill(2))) as result:
+        GROUP BY st.key_id
+        ORDER BY sk.server_name;""", (str(year), str(week).zfill(2))) as result:
             result = await result.fetchall()
             return result, min_date, max_date if result else []
 
@@ -317,16 +324,19 @@ async def get_speedtest_info_month(month):
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute("""
         SELECT 
-            key_id, 
+            st.key_id, 
+            sk.server_name, 
             AVG(ping) as avg_ping,
             AVG(download_speed) as avg_download, 
             AVG(upload_speed) as avg_upload
-        FROM speed_tests 
+        FROM speed_tests st
+        JOIN server_keys sk ON st.key_id = sk.key_id  
         WHERE 
             strftime('%Y', date_time) = ? AND
             strftime('%m', date_time) = ? AND 
             error = 0
-        GROUP BY key_id;""", (str(year), str(month).zfill(2))) as result:
+        GROUP BY st.key_id
+        ORDER BY sk.server_name;""", (str(year), str(month).zfill(2))) as result:
             result = await result.fetchall()
             return result if result else []
 

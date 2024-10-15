@@ -90,7 +90,7 @@ async def speed_test_cli(key_id, server_name, localhost=0):
                              f'download_speed={download_speed} or upload_speed={upload_speed} < {ERROR_SPEED} '
                              f'or ping={ping} > {ERROR_PING}')
                 logger.warning(error_msg)
-                await bot.send_message(ADMINS[0], error_msg)
+                # await bot.send_message(ADMINS[0], error_msg)
             else:
                 await db.main.add_speedtest_info(key_id, ping, download_speed, upload_speed)
 
@@ -102,7 +102,7 @@ async def speed_test_cli(key_id, server_name, localhost=0):
                 await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
                 error_msg = f'{server_name}: speedtest-cli failed after {max_attempts} attempts: {str(error)}'
                 logger.error(error_msg)
-                await bot.send_message(ADMINS[0], error_msg)
+                # await bot.send_message(ADMINS[0], error_msg)
             else:
                 await asyncio.sleep(5)  # Ждем 5 секунд перед следующей попыткой
 
@@ -110,7 +110,7 @@ async def speed_test_cli(key_id, server_name, localhost=0):
             await db.main.add_speedtest_info(key_id, 0, 0, 0, 1)
             error_msg = f'{server_name}: Unexpected error in speedtest-cli: {str(error)}'
             logger.error(error_msg)
-            await bot.send_message(ADMINS[0], error_msg)
+            # await bot.send_message(ADMINS[0], error_msg)
             logger.error(f'Output: {vars().get("output") or "N/A"}')
             return
 
@@ -160,7 +160,7 @@ async def download_file(key_id, server_name, localhost=0):
         await db.main.add_download_info(key_id, 0, 0, 1)
         report = f'{server_name}: error curl-download: {e}'
         logger.error(report)
-        await bot.send_message(ADMINS[0], report)
+        # await bot.send_message(ADMINS[0], report)
 
 
 @logger.catch
