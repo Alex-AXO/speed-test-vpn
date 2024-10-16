@@ -172,7 +172,7 @@ async def save_keys_number(server_name, key_id):
 
         if not count_keys:
             error_text = f"save_keys_number(): server not found: {server_name}"
-            await bot.send_message(ADMINS[0], error_text)
+            # await bot.send_message(ADMINS[0], error_text)
             logger.error(error_text)
             return
 
