@@ -110,8 +110,8 @@ def main():
         #     SET key = "ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpZWW5lZmpQVEhMUjFjckxSSFNFcVhU@147.45.133.24:20659/?outline=1"
         #     WHERE server_name = "axo-034.tw.nl"
         # '''
-        'UPDATE server_keys SET key = REPLACE(key, "176.124.202.194", "91.201.114.89")',
-        'UPDATE server_keys SET key = REPLACE(key, "176.124.210.31", "88.210.12.48")',
+        'UPDATE server_keys SET key = REPLACE(key, "5.42.78.222", "62.60.151.45")',
+        'UPDATE server_keys SET key = REPLACE(key, "5.42.72.70", "150.241.82.166")',
     ]
 
 
