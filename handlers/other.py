@@ -29,10 +29,10 @@ async def add_new_key(message: types.Message):
 @logger.catch
 @dp.message_handler(commands="update", is_admin=True)
 async def update_server(message: types.Message):
-    """Обновление данных сервера: /update <id> [name] [key]"""
+    """Обновление данных сервера: /update &lt;id&gt; [name] [key]"""
     parts = message.text.split()
     if len(parts) < 2:
-        await message.answer("Usage: /update <id> [name] [key]")
+        await message.answer("Usage: /update &lt;id&gt; [name] [key]")
         return
 
     try:
@@ -108,7 +108,7 @@ async def help_command(message):
 Проверка в: {HOURS}:11, {5 + HOURS}:11, {10 + HOURS}:11, {15 + HOURS}:11, {20 + HOURS}:11 (msk, +15 min.).
 
 /add – добавить ключ-сервера
-/update <id> [name] [key] – изменить данные сервера
+/update &lt;id&gt; [name] [key] – изменить данные сервера
 /test – принудительное тестирование
 /last 14 – отчёт за последн. 14 дней
 /week 24 – отчёт за 24 неделю
