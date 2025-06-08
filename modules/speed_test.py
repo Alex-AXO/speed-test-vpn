@@ -15,6 +15,39 @@ from initbot import bot
 from config import FILE, PORT, ADMINS, MODE, JSON_FILE, ERROR_PING, ERROR_SPEED
 
 
+@logger.catch
+async def run_async_command(command):
+    """Execute command asynchronously and log result"""
+    logger.debug(f"Executing: {' '.join(command)}")
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await process.communicate()
+    if process.returncode == 0:
+        logger.debug(f"Success: {' '.join(command)}")
+    else:
+        logger.error(
+            f"Failed ({process.returncode}): {' '.join(command)}\n{stderr.decode().strip()}"
+        )
+    return process.returncode, stdout.decode(), stderr.decode()
+
+
+@logger.catch
+def run_command(command):
+    """Execute command synchronously and log result"""
+    logger.debug(f"Executing: {' '.join(command)}")
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode == 0:
+        logger.debug(f"Success: {' '.join(command)}")
+    else:
+        logger.error(
+            f"Failed ({result.returncode}): {' '.join(command)}\n{result.stderr.strip()}"
+        )
+    return result
+
+
 def convert_to_mbits(speed_string):
     value, unit = speed_string.split()
     value = float(value)
@@ -56,16 +89,11 @@ async def speed_test_cli(key_id, server_name, localhost=0):
     max_attempts = 3
     for attempt in range(1, max_attempts + 1):
         try:
-            process = await asyncio.create_subprocess_exec(
-                *command,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
-            stdout, stderr = await process.communicate()
-            output = stdout.decode()
+            returncode, stdout, stderr = await run_async_command(command)
+            output = stdout
 
-            if process.returncode != 0:
-                raise subprocess.CalledProcessError(process.returncode, command, output, stderr)
+            if returncode != 0:
+                raise subprocess.CalledProcessError(returncode, command, output, stderr)
 
             ping_match = re.search(r"(\d+(?:\.\d+)?) ms", output)
             download_match = re.search(r"Download: (\d+\.\d+ .bit/s)", output)
@@ -127,7 +155,7 @@ async def download_file(key_id, server_name, localhost=0):
         else:
             request = ['curl', '-x', f'socks5h://localhost:{PORT}', '-O', f'https://1090023-cf48670.tmweb.ru/{FILE}']
 
-        result = subprocess.run(request, capture_output=True, text=True)
+        result = run_command(request)
         end_time = datetime.now()
 
         # Мы можем получить количество секунд с помощью метода total_seconds()
@@ -228,8 +256,9 @@ async def speed_test_key(key, key_id, server_name):
         await asyncio.sleep(1)
         try:  # Попытка подключения к серверу VPN
             # Запускаем ss-local, указывая путь к временному файлу конфигурации
+            logger.debug(f"Executing: ss-local -v -c {JSON_FILE}")
             ss_local = subprocess.Popen(['ss-local', '-v', '-c', JSON_FILE])
-            logger.debug(f'{ss_local=}')
+            logger.debug(f'ss_local started pid={ss_local.pid}')
 
             await asyncio.sleep(4)
 
