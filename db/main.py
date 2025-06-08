@@ -1,5 +1,6 @@
 from datetime import date
 from datetime import datetime, timedelta
+from typing import Optional
 
 import aiosqlite
 
@@ -58,6 +59,30 @@ async def add_new_key(server_name, key):
             await db.commit()
             result = cursor.lastrowid
             return result
+
+
+@logger.catch
+async def update_server_info(server_id: int, new_name: Optional[str], new_key: Optional[str]):
+    """Обновление информации о сервере"""
+    async with aiosqlite.connect(DB_PATH) as db:
+        if new_name is not None and new_key is not None:
+            await db.execute(
+                "UPDATE server_keys SET server_name = ?, key = ? WHERE key_id = ?;",
+                (new_name, new_key, server_id),
+            )
+        elif new_name is not None:
+            await db.execute(
+                "UPDATE server_keys SET server_name = ? WHERE key_id = ?;",
+                (new_name, server_id),
+            )
+        elif new_key is not None:
+            await db.execute(
+                "UPDATE server_keys SET key = ? WHERE key_id = ?;",
+                (new_key, server_id),
+            )
+        else:
+            return
+        await db.commit()
 
 
 @logger.catch

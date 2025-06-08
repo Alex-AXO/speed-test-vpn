@@ -1,4 +1,4 @@
-from loguru import logger
+from logger import logger
 from aiogram.utils import executor
 
 import handlers.keyboard

@@ -1,4 +1,4 @@
-from loguru import logger
+from logger import logger
 
 import db.main
 import handlers
@@ -172,7 +172,7 @@ async def show_data(speedtest_info, speedtest_errors, download_info, download_er
         logger.debug(log_text)
 
         report = f'''
-{server_name} {active_key_text} | errs: {data['error_count_speedtest']}
+{key_id} | {server_name} {active_key_text} | errs: {data['error_count_speedtest']}
 ⧖ {avg_ping} ms  ↓ <b>{avg_download}</b> Mbps  ↑ <b>{avg_upload}</b> Mbps
 .
 .
