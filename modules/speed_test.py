@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from loguru import logger
+from logger import logger
 
 import base64
 import json

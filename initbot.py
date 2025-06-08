@@ -1,4 +1,4 @@
-from loguru import logger
+from logger import logger
 from aiogram import Bot, Dispatcher, types
 from aiogram.dispatcher.filters import BoundFilter
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
