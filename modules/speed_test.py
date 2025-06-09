@@ -7,6 +7,7 @@ import json
 import subprocess
 import re
 import os
+from modules.speedtest_integration import speed_test_cli_with_fallback
 import asyncio
 import aiohttp
 
@@ -289,7 +290,7 @@ async def speed_test_key(key, key_id, server_name):
             #     await download_file(key_id, server_name)  # Функция скачивания файла (для замера скорости и времени)
             #     await asyncio.sleep(2)
 
-            await speed_test_cli(key_id, server_name)  # Функция измерения скорости через speedtest-cli
+            await speed_test_cli_with_fallback(key_id, server_name)  # Функция измерения скорости через speedtest-cli
 
             if MODE == 1:
                 await save_keys_number(server_name, key_id)  # Функция записи количества ключей на сервере
@@ -333,7 +334,7 @@ async def speed_test_key(key, key_id, server_name):
             #                         localhost=1)  # Функция скачивания файла (замер: скорости/времени)
             #     await asyncio.sleep(1)
 
-            await speed_test_cli(key_id, server_name, localhost=1)  # Функция измерения скорости через speedtest-cli
+            await speed_test_cli_with_fallback(key_id, server_name, localhost=1)  # Функция измерения скорости через speedtest-cli
 
         except KeyboardInterrupt:
             # Когда нажимается Ctrl + C, мы попадаем сюда
