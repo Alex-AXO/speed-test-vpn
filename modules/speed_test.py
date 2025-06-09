@@ -80,11 +80,15 @@ def convert_speed_to_kilobytes(speed: str) -> float:
 
 @logger.catch
 async def speed_test_cli(key_id, server_name, localhost=0):
-    """Замеряем скорость через speedtest-cli"""
+    """Замеряем скорость через ookla-speedtest"""
     logger.debug(f"{server_name}: speedtest-cli started")
 
     proxychains = 'proxychains4' if MODE == 2 else 'proxychains'
-    command = ['speedtest-cli'] if localhost else [proxychains, 'speedtest-cli']
+    ookla_path = './ookla-speedtest'
+    if localhost:
+        command = [ookla_path, '--accept-license', '--accept-gdpr', '--format=json']
+    else:
+        command = [proxychains, ookla_path, '--accept-license', '--accept-gdpr', '--format=json']
 
     max_attempts = 3
     for attempt in range(1, max_attempts + 1):
@@ -95,18 +99,16 @@ async def speed_test_cli(key_id, server_name, localhost=0):
             if returncode != 0:
                 raise subprocess.CalledProcessError(returncode, command, output, stderr)
 
-            ping_match = re.search(r"(\d+(?:\.\d+)?) ms", output)
-            download_match = re.search(r"Download: (\d+\.\d+ .bit/s)", output)
-            upload_match = re.search(r"Upload: (\d+\.\d+ .bit/s)", output)
+            # Парсим JSON результат от Ookla speedtest
+            try:
+                result_data = json.loads(output)
+                ping = round(result_data['ping']['latency'])
+                download_speed = round((result_data['download']['bandwidth'] * 8) / (1024 * 1024), 2)  # Convert to Mbps
+                upload_speed = round((result_data['upload']['bandwidth'] * 8) / (1024 * 1024), 2)  # Convert to Mbps
+            except (json.JSONDecodeError, KeyError) as e:
+                raise ValueError(f"Не удалось распарсить JSON результат: {str(e)}")
 
-            if not all([ping_match, download_match, upload_match]):
-                raise ValueError("Не удалось найти все необходимые значения в выводе speedtest-cli")
-
-            ping = round(float(ping_match.group(1)))
-            download_speed = convert_to_mbits(download_match.group(1))
-            upload_speed = convert_to_mbits(upload_match.group(1))
-
-            report = (f'speedtest-cli result:\n'
+            report = (f'ookla-speedtest result:\n'
                       f'{ping=} ms,\n'
                       f'{download_speed=} Mbit/s,\n'
                       f'{upload_speed=} Mbit/s')
