@@ -101,7 +101,13 @@ async def speed_test_cli(key_id, server_name, localhost=0):
 
             # Парсим JSON результат от Ookla speedtest
             try:
-                result_data = json.loads(output)
+                # Очищаем вывод от proxychains мусора - ищем начало JSON
+                json_start = output.find('{"type":')
+                if json_start == -1:
+                    raise ValueError("JSON не найден в выводе")
+                clean_output = output[json_start:]
+                result_data = json.loads(clean_output)
+
                 ping = round(result_data['ping']['latency'])
                 download_speed = round((result_data['download']['bandwidth'] * 8) / (1024 * 1024), 2)  # Convert to Mbps
                 upload_speed = round((result_data['upload']['bandwidth'] * 8) / (1024 * 1024), 2)  # Convert to Mbps
